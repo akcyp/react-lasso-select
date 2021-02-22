@@ -265,7 +265,7 @@ class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
       ];
     }
     case pathActions.RESET:
-      return [{ points: [], closed: false }, !state.points.length];
+      return [{ points: [], closed: false }, Boolean(state.points.length)];
     default:
       return [state, false];
     }
