@@ -165,7 +165,7 @@ class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
     return this.svg.convertViewboxPointsToReal(points)
       .map(({x, y}) => ({
         x: Math.round(x / aspectRatio.x),
-        y: Math.round(y * aspectRatio.y)
+        y: Math.round(y / aspectRatio.y)
       }));
   }
   emitOnChange({ points }: IReactLassoPathState): void {
@@ -336,10 +336,9 @@ class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
       return { x: NaN, y: NaN };
     }
     // original * aspectRatio = size
-    const { width, height } = this.svg.getRealSize();
     return {
-      x: width / this.imageRef.current.naturalWidth,
-      y: height / this.imageRef.current.naturalHeight
+      x: this.imageRef.current.clientWidth / this.imageRef.current.naturalWidth,
+      y: this.imageRef.current.clientHeight / this.imageRef.current.naturalHeight
     };
   }
   getRoundedPoints(): IPoint[] {
@@ -426,8 +425,7 @@ class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
   onMediaLoaded(e: React.SyntheticEvent<HTMLImageElement, Event>): void {
     if (this.props.initialPath.length) {
       const aspectRatio = this.getAspectRatio();
-      const initialPoints = this.svg.convertRealPointsToViewbox(this.props.initialPath)
-        .map(({x, y}) => ({ x: x * aspectRatio.x, y: y * aspectRatio.y }));
+      const initialPoints = this.svg.convertRealPointsToViewbox(this.props.initialPath.map(({x, y}) => ({ x: x * aspectRatio.x, y: y * aspectRatio.y })));
       this.setState({
         path: {
           points: initialPoints,
