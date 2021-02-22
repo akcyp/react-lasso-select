@@ -408,7 +408,7 @@ class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
     if (this.props.initialPath.length) {
       this.setState({
         path: {
-          points: this.props.initialPath,
+          points: this.svg.convertRealPointsToViewbox(this.props.initialPath),
           closed: this.props.initialPath.length > 2,
         },
         pointer: this.state.pointer,

@@ -45,13 +45,15 @@ function App () {
         src={src}
         onUpdate={ path => {
           setPoints(path);
-          getCanvas(src, path, (canvas) => {
-            setClippedImg(canvas.toDataURL());
+          getCanvas(src, path, (err, canvas) => {
+            if (!err) {
+              setClippedImg(canvas.toDataURL());
+            }
           });
         }}
       />
       <div>Points: {points.map(({x, y}) => `${x},${y}`).join(' ')}</div>
-      <div><img src={clippedImg} alt="clipped" /></div>
+      <div><img src={clippedImg} alt="" /></div>
     </div>
   );
 }
