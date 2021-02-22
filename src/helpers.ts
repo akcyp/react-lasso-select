@@ -119,6 +119,7 @@ export function getClippedImageCanvas(
   resize = true
 ): void {
   const image = new Image();
+  image.crossOrigin = 'Anonymous';
   const canvas = document.createElement('canvas');
   const ctx = canvas.getContext('2d');
   if (!ctx) {

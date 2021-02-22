@@ -31,7 +31,7 @@ type pathReducerAction =
   | { type: pathActions.MOVE; payload: IPoint }
   | { type: pathActions.RESET };
 
-interface IReactLassoProps {
+export interface IReactLassoProps {
   src: string;
   initialPath: IPoint[];
   style: React.CSSProperties;
@@ -41,11 +41,11 @@ interface IReactLassoProps {
   };
   disabled: boolean;
   imageStyle: React.CSSProperties;
-  onImageLoad: (e?: React.SyntheticEvent<HTMLImageElement, Event>) => void;
-  onImageError: (e?: React.SyntheticEvent<HTMLImageElement, Event>) => void;
+  onImageLoad: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
+  onImageError: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
 
-  onChange?: (path?: IPoint[]) => void;
-  onUpdate?: (path?: IPoint[]) => void;
+  onChange?: (path: IPoint[]) => void;
+  onUpdate?: (path: IPoint[]) => void;
   imageAlt?: string;
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
 }
