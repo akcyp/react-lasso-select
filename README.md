@@ -89,4 +89,4 @@ Props related to image:
 
 Feel free to post any PR or issues. Be here for information on features, bug fixes, or documentation.
 
-To develop clone this repository and run `yarn start` or `npm run start`, this will create a `lib` folder with compiled files.
+To develop clone this repository and run `npm i -D` and `npm run build`, this will create a `lib` folder with compiled files.
