@@ -61,6 +61,7 @@ export interface IReactLassoState {
 
 class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
   public state: IReactLassoState;
+  public imageRef = React.createRef<HTMLImageElement>();
   public svgRef = React.createRef<SVGSVGElement>();
   public svg = new SVGHelper(() => this.svgRef?.current);
   public angles: number[] = [];
@@ -99,6 +100,7 @@ class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
         style={this.props.style}
       >
         <img
+          ref={this.imageRef}
           src={this.props.src}
           alt={this.props.imageAlt}
           crossOrigin={this.props.crossOrigin}
@@ -158,9 +160,17 @@ class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
       this.dispatchPathAction({ type: pathActions.RESET });
     }
   }
+  convertPoints (points: IPoint[]): IPoint[] {
+    const aspectRatio = this.getAspectRatio();
+    return this.svg.convertViewboxPointsToReal(points)
+      .map(({x, y}) => ({
+        x: Math.round(x / aspectRatio.x),
+        y: Math.round(y * aspectRatio.y)
+      }));
+  }
   emitOnChange({ points }: IReactLassoPathState): void {
     if (this.props.onChange) {
-      this.props.onChange(this.svg.convertViewboxPointsToReal(points));
+      this.props.onChange(this.convertPoints(points));
     }
   }
   emitOnUpdate(convertedPoints: IPoint[]): void {
@@ -170,9 +180,7 @@ class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
   }
   checkIfPathUpdated(wasClosedBefore: boolean, newPathState = this.state.path): void {
     if (newPathState.closed || wasClosedBefore) {
-      const convertedPoints = this.svg.convertViewboxPointsToReal(
-        newPathState.points
-      );
+      const convertedPoints = this.convertPoints(newPathState.points);
       if (!arePointListEqual(convertedPoints, this.lastEmittedPoints)) {
         this.emitOnUpdate(convertedPoints);
         this.lastEmittedPoints = convertedPoints.map(({ x, y }) => ({ x, y }));
@@ -323,6 +331,17 @@ class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
     const svg = this.svgRef.current;
     return Boolean(svg.width.baseVal.value && svg.height.baseVal.value);
   }
+  getAspectRatio (): IPoint {
+    if (!this.imageRef.current) {
+      return { x: NaN, y: NaN };
+    }
+    // original * aspectRatio = size
+    const { width, height } = this.svg.getRealSize();
+    return {
+      x: width / this.imageRef.current.naturalWidth,
+      y: height / this.imageRef.current.naturalHeight
+    };
+  }
   getRoundedPoints(): IPoint[] {
     return this.state.path.points.map(roundPointCoordinates);
   }
@@ -406,9 +425,12 @@ class ReactLasso extends React.Component<IReactLassoProps, IReactLassoState> {
   }
   onMediaLoaded(e: React.SyntheticEvent<HTMLImageElement, Event>): void {
     if (this.props.initialPath.length) {
+      const aspectRatio = this.getAspectRatio();
+      const initialPoints = this.svg.convertRealPointsToViewbox(this.props.initialPath)
+        .map(({x, y}) => ({ x: x * aspectRatio.x, y: y * aspectRatio.y }));
       this.setState({
         path: {
-          points: this.svg.convertRealPointsToViewbox(this.props.initialPath),
+          points: initialPoints,
           closed: this.props.initialPath.length > 2,
         },
         pointer: this.state.pointer,

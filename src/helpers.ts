@@ -121,7 +121,7 @@ export function getClippedImageCanvas(
   src: string,
   path: IPoint[],
   callback: (err: Error | null, canvas: HTMLCanvasElement) => void,
-  resize = true
+  crop = true
 ): void {
   const image = new Image();
   image.crossOrigin = 'Anonymous';
@@ -153,7 +153,7 @@ export function getClippedImageCanvas(
       ctx.clip('evenodd');
       ctx.globalCompositeOperation = 'destination-out';
       ctx.fill();
-      if (resize) {
+      if (crop) {
         const xAxis = path.map(({ x }) => x + 1);
         const yAxis = path.map(({ y }) => y + 1);
         const [minX, minY] = [
