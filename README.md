@@ -18,6 +18,14 @@ A responsive react tool for marking irregular areas in images (lasso / free sele
 
 ## Installation
 
+With yarn:
+
+```bash
+yarn add react-lasso-select
+```
+
+With npm:
+
 ```bash
 npm i react-lasso-select
 ```
@@ -88,6 +96,14 @@ Props related to image:
 
 - `onChange` is triggered with every little movement while dragging points
 - `onUpdate` runs at the end of a drag, so it's better to use it for better performance
+
+## Tips for better user experience
+
+There are some extra features made to improve user experience.
+
+1. Press CTRL (Meta Key on Mac) while selecting area to straighten the path from the last point. (Keep the angle of 15 degrees)
+
+2. Press CTRL + SHIFT keys to maintain parallelism to another sides.
 
 ## Contributing / Developing
 
