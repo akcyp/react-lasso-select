@@ -12,11 +12,13 @@ import {
   arePointListEqual,
   objectToClassName,
   getClippedImageCanvas,
+  Point,
+  Vector,
+  touchOrMouseEvent,
+  Size
 } from './helpers';
 
 import { pathReducer, pathActions, pathReducerAction } from './pathReducer';
-
-import { Point, Vector, touchOrMouseEvent, Size } from './types';
 
 export interface ReactLassoProps {
   src: string;

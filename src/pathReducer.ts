@@ -1,6 +1,5 @@
 import { ReactLassoPathState } from '.';
-import { arePointsEqual } from './helpers';
-import { Point } from './types';
+import { arePointsEqual, Point } from './helpers';
 
 export enum pathActions {
   ADD = 'ADD',

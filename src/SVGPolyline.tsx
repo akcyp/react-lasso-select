@@ -1,6 +1,6 @@
 import React from 'react';
-import { Point } from './types';
 import { withDraggable } from './withDraggable';
+import { Point } from './helpers';
 
 export interface SVGPolylineProps {
   path: Point[];

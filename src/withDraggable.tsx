@@ -1,7 +1,7 @@
 import React from 'react';
 import { SVGHelper } from './SVGHelpers';
 
-import { Point, Vector, touchOrMouseEvent } from './types';
+import { Point, Vector, touchOrMouseEvent } from './helpers';
 
 export interface WithDraggableProps {
   draggable: boolean;

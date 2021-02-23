@@ -1,5 +1,5 @@
 import React from 'react';
-import { Point } from './types';
+import { Point } from './helpers';
 
 export interface SVGPolygonProps {
   path: Point[];

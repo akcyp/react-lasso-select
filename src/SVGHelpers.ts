@@ -1,4 +1,4 @@
-import { Point, Size, touchOrMouseEvent } from './types';
+import { Point, Size, touchOrMouseEvent } from './helpers';
 
 export class SVGHelper {
   public getSvgElement: () => SVGSVGElement | null | undefined
