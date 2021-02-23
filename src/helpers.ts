@@ -33,6 +33,9 @@ export function getClippedImageCanvas(
   if (!ctx) {
     return callback(new Error('CTX is null'), canvas);
   }
+  image.onerror = () => {
+    callback(new Error('Failed to load image'), canvas);
+  };
   image.onload = () => {
     try {
       canvas.width = image.naturalWidth + 2;
