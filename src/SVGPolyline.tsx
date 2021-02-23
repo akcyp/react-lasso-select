@@ -1,16 +1,14 @@
 import React from 'react';
-import withDraggable from './withDraggable';
+import { Point } from './types';
+import { withDraggable } from './withDraggable';
 
-export interface IPolylineProps {
-  path: { x: number; y: number }[];
+export interface SVGPolylineProps {
+  path: Point[];
   animate: boolean;
 }
 
-export default withDraggable(
-  React.forwardRef<SVGPolylineElement, IPolylineProps>(function Polyline(
-    { path, animate } : IPolylineProps,
-    ref
-  ) {
+export const SVGPolyline = withDraggable(
+  React.forwardRef<SVGPolylineElement, SVGPolylineProps>(function SVGPolyline({ path, animate }, ref) {
     return (
       <polyline
         ref={ref}

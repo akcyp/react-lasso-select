@@ -1,10 +1,11 @@
 import React from 'react';
+import { Point } from './types';
 
-export interface IPolygonProps {
-  path: { x: number; y: number }[];
+export interface SVGPolygonProps {
+  path: Point[];
 }
 
-function Polygon({ path }: IPolygonProps): JSX.Element {
+export function SVGPolygon({ path }: SVGPolygonProps) {
   return (
     <polygon
       points={path.map(({ x, y }) => `${x},${y}`).join(' ')}
@@ -15,4 +16,3 @@ function Polygon({ path }: IPolygonProps): JSX.Element {
     />
   );
 }
-export default Polygon;

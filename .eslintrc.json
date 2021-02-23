@@ -31,6 +31,14 @@
         "semi": ["error", "always"],
         "max-len": "off",
         "@typescript-eslint/no-unused-vars": ["error", { "ignoreRestSiblings": true }],
-        "@typescript-eslint/explicit-module-boundary-types": ["error", { "allowHigherOrderFunctions": true }]
-    }
+        "@typescript-eslint/explicit-module-boundary-types": "off"
+    },
+    "overrides": [
+        {
+            "files": ["**/*.tsx"],
+            "rules": {
+                "react/prop-types": "off"
+            }
+        }
+    ]
 }

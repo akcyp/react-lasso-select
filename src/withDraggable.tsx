@@ -1,34 +1,28 @@
 import React from 'react';
-import { SVGHelper } from './helpers';
+import { SVGHelper } from './SVGHelpers';
 
-import { IPoint, IVector, touchOrMouseEvent } from './typings';
+import { Point, Vector, touchOrMouseEvent } from './types';
 
-export interface IWithDraggableProps {
+export interface WithDraggableProps {
   draggable: boolean;
-  onDragStart?: (arg: IPoint & IVector) => void;
-  onDrag?: (arg: IVector) => void;
-  onDragEnd?: (arg: IPoint) => void;
+  onDragStart?: (arg: Point & Vector) => void;
+  onDrag?: (arg: Vector) => void;
+  onDragEnd?: (arg: Point) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types, @typescript-eslint/ban-types
-export const withDraggable= <P extends object>(
+// eslint-disable-next-line @typescript-eslint/ban-types
+export const withDraggable = <P extends object>(
   Component: React.ComponentType<P>
-) => class DraggableHOC extends React.Component<P & IWithDraggableProps> {
+) => class DraggableHOC extends React.Component<P & WithDraggableProps> {
 public ref = React.createRef<SVGSVGElement>();
 public svg = new SVGHelper(() => this.ref?.current?.ownerSVGElement);
-public dragLastPosition: null | { x: number; y: number } = null;
+public dragLastPosition: null | Point = null;
 public wasMoved = false;
-constructor(props: P & IWithDraggableProps) {
-  super(props);
-  this.onMouseTouchDown = this.onMouseTouchDown.bind(this);
-  this.onMouseTouchMove = this.onMouseTouchMove.bind(this);
-  this.onMouseTouchUp = this.onMouseTouchUp.bind(this);
-}
 render() {
   const { draggable, onDrag, onDragStart, onDragEnd, ...rest } = this.props;
   return <Component ref={this.ref} {...(rest as P)} />;
 }
-componentDidUpdate(prevProps: IWithDraggableProps) {
+componentDidUpdate(prevProps: WithDraggableProps) {
   if (prevProps.draggable && !this.props.draggable) {
     // cleanup after props.draggable changed to false
     if (this.dragLastPosition && this.wasMoved) {
@@ -59,11 +53,11 @@ componentWillUnmount() {
   window.removeEventListener('touchmove', this.onMouseTouchMove);
   window.removeEventListener('touchend', this.onMouseTouchUp);
 }
-getMousePosition(ev: TouchEvent & MouseEvent) {
+getMousePosition(ev: TouchEvent | MouseEvent) {
   const e = (ev as unknown) as touchOrMouseEvent<SVGSVGElement>;
   return this.svg.getMouseCoordinates(e);
 }
-onMouseTouchDown(e: TouchEvent & MouseEvent) {
+onMouseTouchDown = (e: TouchEvent | MouseEvent) => {
   if (e.target === this.ref.current && this.props.draggable) {
     const target = e.target as EventTarget & SVGSVGElement;
     e.stopPropagation();
@@ -73,7 +67,7 @@ onMouseTouchDown(e: TouchEvent & MouseEvent) {
     }
   }
 }
-onMouseTouchMove(e: TouchEvent & MouseEvent) {
+onMouseTouchMove = (e: TouchEvent | MouseEvent) => {
   if (this.dragLastPosition) {
     e.stopPropagation();
     const { x, y } = this.getMousePosition(e);
@@ -94,10 +88,10 @@ onMouseTouchMove(e: TouchEvent & MouseEvent) {
     this.wasMoved = true;
   }
 }
-onMouseTouchUp(e: TouchEvent & MouseEvent) {
+onMouseTouchUp = (e: TouchEvent | MouseEvent) => {
   if (this.dragLastPosition && this.wasMoved) {
     e.stopPropagation();
-    if (!e.touches) {
+    if (e instanceof MouseEvent || !e.touches) {
       window.addEventListener('click', (e) => e.stopPropagation(), {
         capture: true,
         once: true,
@@ -110,12 +104,10 @@ onMouseTouchUp(e: TouchEvent & MouseEvent) {
       });
     }
   }
-  if (e.changedTouches || e.cancelable) {
+  if (e instanceof TouchEvent && (e.changedTouches || e.cancelable)) {
     e.preventDefault();
   }
   this.dragLastPosition = null;
   this.wasMoved = false;
 }
   };
-
-export default withDraggable;

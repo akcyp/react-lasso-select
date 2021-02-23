@@ -7,7 +7,11 @@ A responsive react tool for marking irregular areas in images (lasso / free sele
 
 ![Preview](preview.jpg)
 
-[Demo with typescript](https://codesandbox.io/s/react-lasso-select-demo-using-typescript-and-react-hooks-kddyt) | [Advanced demo](https://codesandbox.io/s/react-lasso-select-advanced-demo-g0yn4?file=/src/App.tsx)
+## Demos
+
+- [Demo with typescript](https://codesandbox.io/s/react-lasso-select-demo-using-typescript-and-react-hooks-kddyt)
+
+- [Advanced demo](https://codesandbox.io/s/react-lasso-select-advanced-demo-g0yn4?file=/src/App.tsx)
 
 ## Features
 

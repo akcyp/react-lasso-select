@@ -1,17 +1,13 @@
 import React from 'react';
-import withDraggable from './withDraggable';
+import { Point } from './types';
+import { withDraggable } from './withDraggable';
 
-export interface IPointProps {
-  x: number;
-  y: number;
+export interface SVGPointProps extends Point {
   style: React.CSSProperties;
 }
 
-export default withDraggable(
-  React.forwardRef<SVGRectElement, IPointProps>(function Point(
-    { x, y, style }: IPointProps,
-    ref
-  ) {
+export const SVGPoint = withDraggable(
+  React.forwardRef<SVGRectElement, SVGPointProps>(function SVGPoint({ x, y, style }, ref) {
     return (
       <rect
         ref={ref}
