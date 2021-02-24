@@ -61,8 +61,9 @@ export default function App () {
           setPoints(value);
         }}
         onComplete={value => {
+          if (!value.length) return;
           getCanvas(src, value, (err, canvas) => {
-            if (!err && value.length) {
+            if (!err) {
               setClippedImg(canvas.toDataURL());
             }
           });
