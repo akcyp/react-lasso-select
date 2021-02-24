@@ -5,13 +5,15 @@ import { Point } from './helpers';
 export interface SVGPolylineProps {
   path: Point[];
   animate: boolean;
+  draggable: boolean;
 }
 
 export const SVGPolyline = withDraggable(
-  React.forwardRef<SVGPolylineElement, SVGPolylineProps>(function SVGPolyline({ path, animate }, ref) {
+  React.forwardRef<SVGPolylineElement, SVGPolylineProps>(function SVGPolyline({ path, animate, draggable }, ref) {
     return (
       <polyline
         ref={ref}
+        style={{cursor: draggable ? 'move' : ''}}
         points={path.map(({ x, y }) => `${x},${y}`).join(' ')}
         fill="rgba(0,0,0,0)"
         stroke="white"

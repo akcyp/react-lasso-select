@@ -1,5 +1,5 @@
 import { ReactLassoPathState } from '.';
-import { arePointsEqual, Point } from './helpers';
+import { arePointListEqual, arePointsEqual, Point } from './helpers';
 
 export enum pathActions {
   ADD = 'ADD',
@@ -7,6 +7,7 @@ export enum pathActions {
   MODIFY = 'MODIFY',
   MOVE = 'MOVE',
   RESET = 'RESET',
+  CHANGE = 'CHANGE'
 }
 
 export type pathReducerAction =
@@ -14,7 +15,8 @@ export type pathReducerAction =
   | { type: pathActions.DELETE; payload: number }
   | { type: pathActions.MODIFY; payload: { index: number } & Point }
   | { type: pathActions.MOVE; payload: Point }
-  | { type: pathActions.RESET };
+  | { type: pathActions.RESET }
+  | { type: pathActions.CHANGE; payload: Point[] };
 
 export function pathReducer(
   state: ReactLassoPathState,
@@ -79,6 +81,10 @@ export function pathReducer(
       },
       !!(action.payload.x || action.payload.y),
     ];
+  }
+  case pathActions.CHANGE: {
+    const wasModified = !arePointListEqual(action.payload, state.points);
+    return [{ points: action.payload, closed: wasModified ? action.payload.length > 2 : state.closed }, wasModified];
   }
   case pathActions.RESET:
     return [{ points: [], closed: false }, !!(state.points.length)];

@@ -1,7 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 
-import './index.css';
 import { SVGPolyline } from './SVGPolyline';
 import { SVGPolygon } from './SVGPolygon';
 import { SVGPoint } from './SVGPoint';
@@ -22,7 +21,7 @@ import { pathReducer, pathActions, pathReducerAction } from './pathReducer';
 
 export interface ReactLassoProps {
   src: string;
-  initialPath: Point[];
+  value: Point[];
   style: React.CSSProperties;
   viewBox: Size;
   disabled: boolean;
@@ -30,7 +29,7 @@ export interface ReactLassoProps {
   onImageLoad: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
   onImageError: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
   onChange?: (path: Point[]) => void;
-  onUpdate?: (path: Point[]) => void;
+  onComplete?: (path: Point[]) => void;
   imageAlt?: string;
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
 }
@@ -50,8 +49,14 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
   public svgRef = React.createRef<SVGSVGElement>();
   public svg = new SVGHelper(() => this.svgRef?.current);
   public angles: number[] = [];
+  public path: ReactLassoPathState = {
+    points: [],
+    closed: false
+  };
   public lastEmittedPoints: Point[] = [];
-  public error = false;
+  public lastUpdatedPoints: Point[] = [];
+  public imgError = false;
+  public setPathFromPropsOnMediaLoad = true;
   constructor(props: ReactLassoProps) {
     super(props);
     this.state = {
@@ -73,7 +78,15 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
           ReactFreeSelect__Closed: this.state.path.closed,
           ReactFreeSelect__Disabled: this.props.disabled,
         })}
-        style={this.props.style}
+        style={{
+          display: 'inline-block',
+          position: 'relative',
+          margin: '0',
+          padding: '0',
+          fontSize: '0',
+          cursor: this.props.disabled ? 'not-allowed' : 'default',
+          ...this.props.style
+        }}
       >
         <img
           ref={this.imageRef}
@@ -86,13 +99,23 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
         />
         <svg
           ref={this.svgRef}
+          style={{
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+            overflow: 'hidden',
+            userSelect: 'none',
+            touchAction: 'none',
+          }}
           viewBox={`0 0 ${this.props.viewBox.width} ${this.props.viewBox.height}`}
           onMouseMove={this.onMouseMove}
           onTouchMove={this.onMouseMove}
           onClick={this.onClick}
           onTouchEnd={this.onTouchEnd}
           onContextMenu={this.onContextMenu}
-          onMouseLeave={this.onMouseLeave}
+          onMouseLeave={this.hidePointer}
         >
           {!!this.state.path.points.length && (
             <SVGPolygon path={this.getPolygonPoints()} />
@@ -116,7 +139,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
                   this.state.path.points.length > 2 &&
                   !this.state.path.closed
                     ? 'pointer'
-                    : '',
+                    : (!this.props.disabled ? 'move' : ''),
               }}
               onDrag={({ dx, dy }) => this.onPointDrag(idx, { dx, dy })}
               onDragEnd={this.onDragEnd}
@@ -127,13 +150,17 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     );
   }
   componentDidUpdate(prevProps: ReactLassoProps) {
-    if (
-      (prevProps.src && prevProps.src !== this.props.src) ||
-      (prevProps.disabled === false &&
-        this.props.disabled &&
-        !this.state.path.closed)
-    ) {
+    if (!prevProps.disabled && this.props.disabled && !this.path.closed) {
+      this.hidePointer();
+    }
+    if (prevProps.src && prevProps.src !== this.props.src) {
       this.dispatchPathAction({ type: pathActions.RESET });
+    } else if (!arePointListEqual(prevProps.value, this.props.value)) {
+      if (this.isLoaded()) {
+        this.setPathStateFromProps();
+      } else {
+        this.setPathFromPropsOnMediaLoad = true;
+      }
     }
   }
   convertPoints (points: Point[]): Point[] {
@@ -146,35 +173,38 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
   }
   emitOnChange({ points }: ReactLassoPathState) {
     if (this.props.onChange) {
-      this.props.onChange(this.convertPoints(points));
+      const convertedPoints = this.convertPoints(points);
+      this.lastEmittedPoints = convertedPoints;
+      this.props.onChange(convertedPoints);
     }
   }
-  emitOnUpdate(convertedPoints: Point[]) {
-    if (this.props.onUpdate) {
-      this.props.onUpdate(convertedPoints);
+  emitOnComplete(convertedPoints: Point[]) {
+    if (this.props.onComplete) {
+      this.props.onComplete(convertedPoints);
     }
   }
-  checkIfPathUpdated(wasClosedBefore: boolean, newPathState = this.state.path) {
-    if (newPathState.closed || wasClosedBefore) {
-      const convertedPoints = this.convertPoints(newPathState.points);
-      if (!arePointListEqual(convertedPoints, this.lastEmittedPoints)) {
-        this.emitOnUpdate(convertedPoints);
-        this.lastEmittedPoints = convertedPoints.map(({ x, y }) => ({ x, y }));
+  checkIfPathUpdated(wasClosedBefore: boolean) {
+    if (this.path.closed || wasClosedBefore) {
+      const convertedPoints = this.convertPoints(this.path.points);
+      if (!arePointListEqual(convertedPoints, this.lastUpdatedPoints)) {
+        this.emitOnComplete(convertedPoints);
+        this.lastUpdatedPoints = convertedPoints.map(({ x, y }) => ({ x, y }));
       }
     }
   }
-  setPointer({ x, y }: Point) {
+  setPointer({ x, y }: Point, force = false) {
+    if (this.props.disabled && !force) return;
     this.setState({
-      path: this.state.path,
+      path: this.path,
       pointer: { x, y },
     });
   }
-  calculatePointsAngles(points = this.state.path.points) {
+  calculatePointsAngles() {
     const angles: number[] = [];
-    for (let i = 1; i < points.length; i++) {
+    for (let i = 1; i < this.path.points.length; i++) {
       const alpha = Math.atan2(
-        points[i].y - points[i - 1].y,
-        points[i].x - points[i - 1].x
+        this.path.points[i].y - this.path.points[i - 1].y,
+        this.path.points[i].x - this.path.points[i - 1].x
       );
       const alpha2 = alpha + Math.PI;
       angles.push(alpha, alpha2 > Math.PI ? alpha2 - 2 * Math.PI : alpha2);
@@ -182,31 +212,25 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     return angles.filter((val, idx, ths) => ths.indexOf(val) === idx);
   }
   dispatchPathAction(action: pathReducerAction & { pointer?: Point }) {
+    const wasClosedBefore = this.path.closed;
     const [newPathState, wasModified] = pathReducer(
-      this.state.path,
+      this.path,
       action
     );
-    if (wasModified) {
-      const wasClosedBefore = this.state.path.closed;
-      this.setState({
-        pointer: action.pointer || this.state.pointer,
-        path: newPathState,
-      });
-      this.angles = this.calculatePointsAngles(newPathState.points);
-      if (newPathState.closed || wasClosedBefore) {
-        this.emitOnChange(newPathState);
-      }
-      if (
-        action.type === pathActions.RESET ||
-        action.type === pathActions.ADD ||
-        action.type === pathActions.DELETE
-      ) {
-        this.checkIfPathUpdated(wasClosedBefore, newPathState); // optimized version of onUpdate
-      }
+    this.path = newPathState;
+    if (!wasModified) return;
+    this.setState({
+      pointer: action.pointer || this.path.points[this.path.points.length - 1] || {x: 0, y: 0},
+      path: newPathState,
+    });
+    this.angles = this.calculatePointsAngles();
+    this.emitOnChange(newPathState);
+    if ([pathActions.RESET, pathActions.CHANGE, pathActions.ADD, pathActions.DELETE].includes(action.type)) {
+      this.checkIfPathUpdated(wasClosedBefore); // optimized version of onChange
     }
   }
   isLoaded() {
-    if (this.error || !this.svgRef.current) return false;
+    if (this.imgError || !this.svgRef.current) return false;
     const svg = this.svgRef.current;
     return !!(svg.width.baseVal.value && svg.height.baseVal.value);
   }
@@ -220,13 +244,22 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       y: this.imageRef.current.clientHeight / this.imageRef.current.naturalHeight
     };
   }
+  setPathStateFromProps () {
+    if (arePointListEqual(this.lastEmittedPoints, this.props.value)) return;
+    const aspectRatio = this.getAspectRatio();
+    const value = this.svg.convertRealPointsToViewbox(this.props.value.map(({x, y}) => ({ x: x * aspectRatio.x, y: y * aspectRatio.y })));
+    this.dispatchPathAction({
+      type: pathActions.CHANGE,
+      payload: value
+    });
+  }
   getRoundedPoints() {
-    return this.state.path.points.map(roundPointCoordinates);
+    return this.state.path.points.map((point) => roundPointCoordinates(point));
   }
   getBorder(): Point[] {
     return this.svg
       .getBorderPoints()
-      .map(roundPointCoordinates)
+      .map((point) => roundPointCoordinates(point))
       .map(({ x, y }) => ({ x: x - 1, y: y + 1 })); // fishy bug here so i have to margin area
   }
   getPolygonPoints(): Point[] {
@@ -245,10 +278,10 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     );
   }
   findPointByPosition(x: number, y: number, r = 0): { point: Point, index: number } {
-    const index = this.state.path.points.findIndex(
+    const index = this.path.points.findIndex(
       (point) => Math.max(Math.abs(point.x - x), Math.abs(point.y - y)) <= r
     );
-    return { point: { ...this.state.path.points[index] }, index };
+    return { point: { ...this.path.points[index] }, index };
   }
   getMousePosition(
     e: touchOrMouseEvent<SVGSVGElement>,
@@ -260,8 +293,8 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       const ctrlCmdPressed = navigator.platform.includes('Mac')
         ? e.metaKey
         : e.ctrlKey;
-      const lastPoint = this.state.path.points[
-        this.state.path.points.length - 1
+      const lastPoint = this.path.points[
+        this.path.points.length - 1
       ];
       // straighten path from last point
       if (ctrlCmdPressed && lastPoint) {
@@ -272,7 +305,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
         );
         if (e.shiftKey) {
           // lookup for parallel lines
-          if (this.state.path.points.length > 1) {
+          if (this.path.points.length > 1) {
             const nearestAngle = this.angles.reduce(
               (prev, now) =>
                 Math.abs(now - angle) < Math.abs(prev - angle) ? now : prev,
@@ -300,7 +333,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
   }
   // Events
   onShapeDrag = ({ dx, dy }: Vector) => {
-    const newPath = this.state.path.points.map(({ x, y }) => ({
+    const newPath = this.path.points.map(({ x, y }) => ({
       x: x + dx,
       y: y + dy,
     }));
@@ -312,7 +345,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     }
   }
   onPointDrag = (idx: number, { dx, dy }: Vector) => {
-    const point = { ...this.state.path.points[idx] };
+    const point = { ...this.path.points[idx] };
     point.x += dx;
     point.y += dy;
     if (!this.svg.isAboveTheBorder(point)) {
@@ -327,29 +360,26 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     this.checkIfPathUpdated(false);
   }
   onMediaLoaded = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-    if (this.props.initialPath.length) {
-      const aspectRatio = this.getAspectRatio();
-      const initialPoints = this.svg.convertRealPointsToViewbox(this.props.initialPath.map(({x, y}) => ({ x: x * aspectRatio.x, y: y * aspectRatio.y })));
-      this.setState({
-        path: {
-          points: initialPoints,
-          closed: this.props.initialPath.length > 2,
-        },
-        pointer: this.state.pointer,
-      });
+    if (this.setPathFromPropsOnMediaLoad) {
+      this.setPathStateFromProps();
+      this.setPathFromPropsOnMediaLoad = false;
     }
-    this.error = false;
+    this.imgError = false;
     this.props.onImageLoad(e);
   }
   onMediaError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     this.dispatchPathAction({ type: pathActions.RESET });
-    this.error = true;
+    this.imgError = true;
     this.props.onImageError(e);
+  }
+  hidePointer = () => {
+    const lastPoint = this.path.points[this.path.points.length - 1] || {x: 0, y: 0};
+    this.setPointer({ ...lastPoint }, true); // tricky way to hide pointer line
   }
   onClickTouchEvent = (e: touchOrMouseEvent<SVGSVGElement>) => {
     if (!this.isLoaded()) return;
     if (this.props.disabled) return;
-    if (this.state.path.closed) {
+    if (this.path.closed) {
       if (e.target === this.svgRef.current) {
         this.dispatchPathAction({
           type: pathActions.RESET,
@@ -361,11 +391,11 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     if (!this.svg.isAboveTheBorder(pointer)) {
       this.dispatchPathAction({
         type: pathActions.ADD,
-        payload: { ...pointer },
+        payload: roundPointCoordinates(pointer, 1e3),
         pointer,
       });
     } else {
-      this.onMouseLeave();
+      this.hidePointer();
     }
   }
   onClick = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
@@ -385,7 +415,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
   onContextMenu = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     if (!this.isLoaded()) return;
     e.preventDefault();
-    if (this.props.disabled || this.state.path.closed) return;
+    if (this.props.disabled || this.path.closed) return;
     const [pointer, { index }] = this.getMousePosition(e);
     if (index > -1) {
       this.dispatchPathAction({
@@ -397,14 +427,8 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       this.setPointer(pointer);
     }
   }
-  onMouseLeave = () => {
-    const lastPoint = this.state.path.points[this.state.path.points.length - 1];
-    if (lastPoint) {
-      this.setPointer({ ...lastPoint }); // tricky way to hide pointer line
-    }
-  }
   static propTypes = {
-    initialPath: PropTypes.arrayOf(
+    value: PropTypes.arrayOf(
       PropTypes.exact({
         x: PropTypes.number.isRequired,
         y: PropTypes.number.isRequired,
@@ -417,7 +441,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     }),
     disabled: PropTypes.bool,
     onChange: PropTypes.func,
-    onUpdate: PropTypes.func,
+    onComplete: PropTypes.func,
     src: PropTypes.string.isRequired,
     imageAlt: PropTypes.string,
     crossOrigin: PropTypes.string,
@@ -426,7 +450,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     onImageError: PropTypes.func,
   };
   static defaultProps = {
-    initialPath: [],
+    value: [],
     style: {},
     imageStyle: {},
     viewBox: { width: 1e3, height: 1e3 },

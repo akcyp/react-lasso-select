@@ -36,38 +36,44 @@ npm i react-lasso-select
 
 ## Usage
 
-Import the main js module and css file:
+Import the main js module:
 
 ```js
 import ReactLassoSelect from 'react-lasso-select';
-import 'react-lasso-select/lib/index.css';
 ```
 
 ## Example
 
 ```jsx
+import { useState } from 'react';
 import ReactLassoSelect, { getCanvas } from 'react-lasso-select';
-import 'react-lasso-select/lib/index.css';
 
-function App () {
+export default function App () {
   const src = './demo.jpg';
   const [points, setPoints] = useState([]);
   const [clippedImg, setClippedImg] = useState();
   return (
     <div className="App">
       <ReactLassoSelect
+        value={points}
         src={src}
-        onUpdate={ path => {
-          setPoints(path);
-          getCanvas(src, path, (err, canvas) => {
-            if (!err) {
+        onChange={value => {
+          setPoints(value);
+        }}
+        onComplete={value => {
+          getCanvas(src, value, (err, canvas) => {
+            if (!err && value.length) {
               setClippedImg(canvas.toDataURL());
             }
           });
         }}
       />
-      <div>Points: {points.map(({x, y}) => `${x},${y}`).join(' ')}</div>
-      <div><img src={clippedImg} alt="" /></div>
+      <div>
+        Points: {points.map(({x, y}) => `${x},${y}`).join(' ')}
+      </div>
+      <div>
+        <img src={clippedImg} alt="" />
+      </div>
     </div>
   );
 }
@@ -78,12 +84,12 @@ function App () {
 Most important props:
 
 - `src` (string) (required) Specifies the path to the image (or base64 string)
-- `onUpdate(path)` Callback fired every time path has been changed
-- `onChange(path)` Callback fired every time path has been updated
+- `value` (array of  {x: number, y: number}) Specifies input value
+- `onComplete(path)` Callback fired every time path has been closed / updated / reset (use it for better performance insead of `onChange`)
+- `onChange(path)` Callback fired every time path has been changed (ex. point added/removed/replaced)
 
 Props related to component:
 
-- `initialPath` (array of {x: number, y: number}) default path set each time an image is loaded
 - `disabled` (boolean, default false) Set to true to block selecting
 - `style` (object) CSS style attributes for component container
 - `viewBox` ({width: number, height: number}) Viewbox attribute for svg element, avoid changing the default value.
@@ -96,10 +102,10 @@ Props related to image:
 - `onImageLoad(event)` A callback which happens when the image is loaded
 - `onImageError(event)` Callback called when image is unable to load
 
-## Difference between `onUpdate` and `onChange` props
+## Difference between `onChange` and `onComplete` props in terms of dragging
 
 - `onChange` is triggered with every little movement while dragging points
-- `onUpdate` runs at the end of a drag, so it's better to use it for better performance
+- `onComplete` runs at the end of a drag, so it's better to use it for better performance
 
 ## Tips for better user experience
 
@@ -113,4 +119,4 @@ There are some extra features made to improve user experience.
 
 Feel free to post any PR or issues. Be here for information on features, bug fixes, or documentation.
 
-To develop clone this repository and run `npm i -D` and `npm run build`, this will create a `lib` folder with compiled files.
+To develop clone this repository and run `npm i -D` and `npm run build`, this will create a `lib` folder with compiled files. I suggest you test your changes before PR with `npm link` and `create-react-app` & `npm link react-lasso-select` in another directory.

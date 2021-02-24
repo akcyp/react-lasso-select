@@ -1,4 +1,4 @@
-import { Point, Size, touchOrMouseEvent } from './helpers';
+import { Point, roundPointCoordinates, Size, touchOrMouseEvent } from './helpers';
 
 export class SVGHelper {
   public getSvgElement: () => SVGSVGElement | null | undefined
@@ -47,7 +47,7 @@ export class SVGHelper {
       const p = Object.assign(svg.createSVGPoint(), { x, y }).matrixTransform(
         ctm
       );
-      return { x: Math.floor(p.x), y: Math.floor(p.y) };
+      return roundPointCoordinates(p);
     });
   }
   convertRealPointsToViewbox(points: Point[]): Point[] {
@@ -57,7 +57,7 @@ export class SVGHelper {
       const p = Object.assign(svg.createSVGPoint(), { x, y }).matrixTransform(
         ctm
       );
-      return { x: p.x, y: p.y };
+      return roundPointCoordinates(p, 1e3);
     });
   }
   getBorderPoints(repeatFirst = true) {

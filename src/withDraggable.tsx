@@ -20,7 +20,7 @@ public dragLastPosition: null | Point = null;
 public wasMoved = false;
 render() {
   const { draggable, onDrag, onDragStart, onDragEnd, ...rest } = this.props;
-  return <Component ref={this.ref} {...(rest as P)} />;
+  return <Component ref={this.ref} {...(rest as P)} draggable={draggable} />;
 }
 componentDidUpdate(prevProps: WithDraggableProps) {
   if (prevProps.draggable && !this.props.draggable) {
