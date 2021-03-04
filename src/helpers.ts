@@ -17,12 +17,8 @@ export interface Dictionary<T> {
   [key: string]: T;
 }
 
-export type touchOrMouseEvent<T> =
-  | React.MouseEvent<T, MouseEvent>
-  | React.TouchEvent<T>;
-export type touchAndMouseEvent<T> = React.MouseEvent<T, MouseEvent> &
-  React.TouchEvent<T>;
-
+export type touchOrMouseEvent<T> = React.MouseEvent<T, MouseEvent> | React.TouchEvent<T>;
+export type touchAndMouseEvent<T> = React.MouseEvent<T, MouseEvent> & React.TouchEvent<T>;
 
 export const objectToClassName = (obj: Dictionary<boolean>) => {
   return Object.keys(obj)
@@ -30,18 +26,16 @@ export const objectToClassName = (obj: Dictionary<boolean>) => {
     .join(' ');
 };
 
-export const arePointsEqual = (p1: Point, p2: Point) =>
-  p1.x === p2.x && p1.y === p2.y;
+export const arePointsEqual = (p1: Point, p2: Point) => p1.x === p2.x && p1.y === p2.y;
 
 export const arePointListEqual = (arr1: Point[], arr2: Point[]) => {
-  if ((!arr1 && arr2) || (arr1 && !arr2) || arr1.length !== arr2.length)
-    return false;
+  if ((!arr1 && arr2) || (arr1 && !arr2) || arr1.length !== arr2.length) return false;
   return arr1.every((point, i) => arePointsEqual(point, arr2[i]));
 };
 
 export const roundPointCoordinates = ({ x, y }: Point, p = 1): Point => ({
   x: Math.round((x + Number.EPSILON) * p) / p,
-  y: Math.round((y + Number.EPSILON) * p) / p,
+  y: Math.round((y + Number.EPSILON) * p) / p
 });
 
 export function getClippedImageCanvas(
@@ -86,14 +80,8 @@ export function getClippedImageCanvas(
       if (crop) {
         const xAxis = path.map(({ x }) => x + 1);
         const yAxis = path.map(({ y }) => y + 1);
-        const [minX, minY] = [
-          Math.min.apply(null, xAxis),
-          Math.min.apply(null, yAxis),
-        ];
-        const [maxX, maxY] = [
-          Math.max.apply(null, xAxis),
-          Math.max.apply(null, yAxis),
-        ];
+        const [minX, minY] = [Math.min.apply(null, xAxis), Math.min.apply(null, yAxis)];
+        const [maxX, maxY] = [Math.max.apply(null, xAxis), Math.max.apply(null, yAxis)];
         const [width, height] = [maxX - minX, maxY - minY];
         const imageData = ctx.getImageData(minX, minY, width, height);
         canvas.width = width;

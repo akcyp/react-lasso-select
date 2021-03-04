@@ -23,7 +23,11 @@
     }
   },
   "rules": {
-    "indent": ["error", 2],
+    "indent": ["error", 2, {
+      "SwitchCase": 1,
+      "flatTernaryExpressions": true,
+      "offsetTernaryExpressions": true
+    }],
     "linebreak-style": ["error", "windows"],
     "quotes": ["error", "single"],
     "semi": ["error", "always"],

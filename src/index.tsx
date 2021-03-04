@@ -62,12 +62,12 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     this.state = {
       path: {
         points: [],
-        closed: false,
+        closed: false
       },
       pointer: {
         x: props.viewBox.width / 2,
-        y: props.viewBox.width / 2,
-      },
+        y: props.viewBox.width / 2
+      }
     };
   }
   render() {
@@ -76,7 +76,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
         className={objectToClassName({
           ReactFreeSelect__Component: true,
           ReactFreeSelect__Closed: this.state.path.closed,
-          ReactFreeSelect__Disabled: this.props.disabled,
+          ReactFreeSelect__Disabled: this.props.disabled
         })}
         style={{
           display: 'inline-block',
@@ -107,7 +107,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
             height: '100%',
             overflow: 'hidden',
             userSelect: 'none',
-            touchAction: 'none',
+            touchAction: 'none'
           }}
           viewBox={`0 0 ${this.props.viewBox.width} ${this.props.viewBox.height}`}
           onMouseMove={this.onMouseMove}
@@ -117,9 +117,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
           onContextMenu={this.onContextMenu}
           onMouseLeave={this.hidePointer}
         >
-          {!!this.state.path.points.length && (
-            <SVGPolygon path={this.getPolygonPoints()} />
-          )}
+          {!!this.state.path.points.length && <SVGPolygon path={this.getPolygonPoints()} />}
           <SVGPolyline
             draggable={this.state.path.closed && !this.props.disabled}
             onDrag={this.onShapeDrag}
@@ -135,11 +133,9 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
               draggable={!this.props.disabled}
               style={{
                 cursor:
-                  !idx &&
-                  this.state.path.points.length > 2 &&
-                  !this.state.path.closed
+                  !idx && this.state.path.points.length > 2 && !this.state.path.closed
                     ? 'pointer'
-                    : (!this.props.disabled ? 'move' : ''),
+                    : undefined
               }}
               onDrag={({ dx, dy }) => this.onPointDrag(idx, { dx, dy })}
               onDragEnd={this.onDragEnd}
@@ -170,13 +166,12 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       }
     }
   }
-  convertPoints (points: Point[]): Point[] {
+  convertPoints(points: Point[]): Point[] {
     const aspectRatio = this.getAspectRatio();
-    return this.svg.convertViewboxPointsToReal(points)
-      .map(({x, y}) => ({
-        x: Math.round(x / aspectRatio.x),
-        y: Math.round(y / aspectRatio.y)
-      }));
+    return this.svg.convertViewboxPointsToReal(points).map(({ x, y }) => ({
+      x: Math.round(x / aspectRatio.x),
+      y: Math.round(y / aspectRatio.y)
+    }));
   }
   emitOnChange({ points }: ReactLassoPathState) {
     if (this.props.onChange) {
@@ -203,7 +198,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     if (this.props.disabled && !force) return;
     this.setState({
       path: this.path,
-      pointer: { x, y },
+      pointer: { x, y }
     });
   }
   calculatePointsAngles() {
@@ -220,20 +215,21 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
   }
   dispatchPathAction(action: pathReducerAction & { pointer?: Point }) {
     const wasClosedBefore = this.path.closed;
-    const [newPathState, wasModified] = pathReducer(
-      this.path,
-      action
-    );
-    newPathState.points = newPathState.points.map(point => roundPointCoordinates(point, 1e3));
+    const [newPathState, wasModified] = pathReducer(this.path, action);
+    newPathState.points = newPathState.points.map((point) => roundPointCoordinates(point, 1e3));
     this.path = newPathState;
     if (!wasModified) return;
     this.setState({
-      pointer: action.pointer || this.path.points[this.path.points.length - 1] || {x: 0, y: 0},
-      path: newPathState,
+      pointer: action.pointer || this.path.points[this.path.points.length - 1] || { x: 0, y: 0 },
+      path: newPathState
     });
     this.angles = this.calculatePointsAngles();
     this.emitOnChange(newPathState);
-    if ([pathActions.RESET, pathActions.CHANGE, pathActions.ADD, pathActions.DELETE].includes(action.type)) {
+    if (
+      [pathActions.RESET, pathActions.CHANGE, pathActions.ADD, pathActions.DELETE].includes(
+        action.type
+      )
+    ) {
       this.checkIfPathUpdated(wasClosedBefore); // optimized version of onChange
     }
   }
@@ -242,7 +238,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     const svg = this.svgRef.current;
     return !!(svg.width.baseVal.value && svg.height.baseVal.value);
   }
-  getAspectRatio (): Point {
+  getAspectRatio(): Point {
     if (!this.imageRef.current) {
       return { x: NaN, y: NaN };
     }
@@ -252,10 +248,15 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       y: this.imageRef.current.clientHeight / this.imageRef.current.naturalHeight
     };
   }
-  setPathStateFromProps () {
+  setPathStateFromProps() {
     if (arePointListEqual(this.lastEmittedPoints, this.props.value)) return;
     const aspectRatio = this.getAspectRatio();
-    const value = this.svg.convertRealPointsToViewbox(this.props.value.map(({x, y}) => ({ x: x * aspectRatio.x, y: y * aspectRatio.y })));
+    const value = this.svg.convertRealPointsToViewbox(
+      this.props.value.map(({ x, y }) => ({
+        x: x * aspectRatio.x,
+        y: y * aspectRatio.y
+      }))
+    );
     this.dispatchPathAction({
       type: pathActions.CHANGE,
       payload: value
@@ -280,12 +281,10 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
   getPolylinePoints(): Point[] {
     const roundedPoints = this.getRoundedPoints();
     return roundedPoints.concat(
-      this.state.path.closed
-        ? roundedPoints[0]
-        : roundPointCoordinates(this.state.pointer)
+      this.state.path.closed ? roundedPoints[0] : roundPointCoordinates(this.state.pointer)
     );
   }
-  findPointByPosition(x: number, y: number, r = 0): { point: Point, index: number } {
+  findPointByPosition(x: number, y: number, r = 0): { point: Point; index: number } {
     const index = this.path.points.findIndex(
       (point) => Math.max(Math.abs(point.x - x), Math.abs(point.y - y)) <= r
     );
@@ -298,25 +297,17 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
   ): [Point, { point: Point; index: number }] {
     let pointer = this.svg.getMouseCoordinates(e);
     if (lookupForApproximation) {
-      const ctrlCmdPressed = navigator.platform.includes('Mac')
-        ? e.metaKey
-        : e.ctrlKey;
-      const lastPoint = this.path.points[
-        this.path.points.length - 1
-      ];
+      const ctrlCmdPressed = navigator.platform.includes('Mac') ? e.metaKey : e.ctrlKey;
+      const lastPoint = this.path.points[this.path.points.length - 1];
       // straighten path from last point
       if (ctrlCmdPressed && lastPoint) {
         const r = Math.hypot(pointer.x - lastPoint.x, pointer.y - lastPoint.y);
-        const angle = Math.atan2(
-          pointer.y - lastPoint.y,
-          pointer.x - lastPoint.x
-        );
+        const angle = Math.atan2(pointer.y - lastPoint.y, pointer.x - lastPoint.x);
         if (e.shiftKey) {
           // lookup for parallel lines
           if (this.path.points.length > 1) {
             const nearestAngle = this.angles.reduce(
-              (prev, now) =>
-                Math.abs(now - angle) < Math.abs(prev - angle) ? now : prev,
+              (prev, now) => (Math.abs(now - angle) < Math.abs(prev - angle) ? now : prev),
               Infinity
             );
             if (nearestAngle !== Infinity) {
@@ -343,15 +334,15 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
   onShapeDrag = ({ dx, dy }: Vector) => {
     const newPath = this.path.points.map(({ x, y }) => ({
       x: x + dx,
-      y: y + dy,
+      y: y + dy
     }));
     if (!newPath.some((point) => this.svg.isAboveTheBorder(point))) {
       this.dispatchPathAction({
         type: pathActions.MOVE,
-        payload: { x: dx, y: dy },
+        payload: { x: dx, y: dy }
       });
     }
-  }
+  };
   onPointDrag = (idx: number, { dx, dy }: Vector) => {
     const point = { ...this.path.points[idx] };
     point.x += dx;
@@ -360,13 +351,13 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       this.dispatchPathAction({
         type: pathActions.MODIFY,
         payload: { ...point, index: idx },
-        pointer: point,
+        pointer: point
       });
     }
-  }
+  };
   onDragEnd = () => {
     this.checkIfPathUpdated(false);
-  }
+  };
   onMediaLoaded = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     if (this.setPathFromPropsOnMediaLoad) {
       this.setPathStateFromProps();
@@ -374,23 +365,26 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     }
     this.imgError = false;
     this.props.onImageLoad(e);
-  }
+  };
   onMediaError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     this.dispatchPathAction({ type: pathActions.RESET });
     this.imgError = true;
     this.props.onImageError(e);
-  }
+  };
   hidePointer = () => {
-    const lastPoint = this.path.points[this.path.points.length - 1] || {x: 0, y: 0};
+    const lastPoint = this.path.points[this.path.points.length - 1] || {
+      x: 0,
+      y: 0
+    };
     this.setPointer({ ...lastPoint }, true); // tricky way to hide pointer line
-  }
+  };
   onClickTouchEvent = (e: touchOrMouseEvent<SVGSVGElement>) => {
     if (!this.isLoaded()) return;
     if (this.props.disabled) return;
     if (this.path.closed) {
       if (e.target === this.svgRef.current) {
         this.dispatchPathAction({
-          type: pathActions.RESET,
+          type: pathActions.RESET
         });
       }
       return;
@@ -400,26 +394,26 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       this.dispatchPathAction({
         type: pathActions.ADD,
         payload: roundPointCoordinates(pointer, 1e3),
-        pointer,
+        pointer
       });
     } else {
       this.hidePointer();
     }
-  }
+  };
   onClick = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     this.onClickTouchEvent(e);
-  }
+  };
   onTouchEnd = (e: React.TouchEvent<SVGSVGElement>) => {
     if (e.cancelable) {
       e.preventDefault();
       this.onClickTouchEvent(e);
     }
-  }
+  };
   onMouseMove = (e: touchOrMouseEvent<SVGSVGElement>) => {
     if (!this.isLoaded()) return;
     const [pointer] = this.getMousePosition(e);
     this.setPointer(pointer);
-  }
+  };
   onContextMenu = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     if (!this.isLoaded()) return;
     e.preventDefault();
@@ -429,23 +423,23 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       this.dispatchPathAction({
         type: pathActions.DELETE,
         payload: index,
-        pointer,
+        pointer
       });
     } else {
       this.setPointer(pointer);
     }
-  }
+  };
   static propTypes = {
     value: PropTypes.arrayOf(
       PropTypes.exact({
         x: PropTypes.number.isRequired,
-        y: PropTypes.number.isRequired,
+        y: PropTypes.number.isRequired
       })
     ),
     style: PropTypes.shape({}),
     viewBox: PropTypes.exact({
       width: PropTypes.number.isRequired,
-      height: PropTypes.number.isRequired,
+      height: PropTypes.number.isRequired
     }),
     disabled: PropTypes.bool,
     onChange: PropTypes.func,
@@ -455,7 +449,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     crossOrigin: PropTypes.string,
     imageStyle: PropTypes.shape({}),
     onImageLoad: PropTypes.func,
-    onImageError: PropTypes.func,
+    onImageError: PropTypes.func
   };
   static defaultProps = {
     value: [],
@@ -468,8 +462,4 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
   };
 }
 
-export {
-  ReactLasso as default,
-  ReactLasso as Component,
-  getClippedImageCanvas as getCanvas,
-};
+export { ReactLasso as default, ReactLasso as Component, getClippedImageCanvas as getCanvas };

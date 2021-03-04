@@ -9,10 +9,17 @@ export interface SVGPointProps extends Point {
 }
 
 export const SVGPoint = withDraggable(
-  React.forwardRef<SVGRectElement, SVGPointProps>(function SVGPoint({ x, y, onClick, style }, ref) {
+  React.forwardRef<SVGRectElement, SVGPointProps>(function SVGPoint(
+    { x, y, onClick, draggable, style },
+    ref
+  ) {
+    const { cursor = draggable ? 'move' : 'default', ...rest } = style;
     return (
       <rect
-        style={style}
+        style={{
+          cursor,
+          ...rest
+        }}
         ref={ref}
         x={x - 10}
         y={y - 10}

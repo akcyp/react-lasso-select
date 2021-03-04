@@ -24,71 +24,68 @@ export function pathReducer(
 ): [ReactLassoPathState, boolean] {
   const length = state.points.length;
   switch (action.type) {
-  case pathActions.ADD: {
-    if (state.closed) return [state, false];
-    if (
-      (length > 0 &&
-          arePointsEqual(state.points[length - 1], action.payload)) ||
-        (length > 1 &&
-          arePointsEqual(state.points[length - 2], action.payload))
-    ) {
-      return [state, false];
-    }
-    const needToBeClosed =
-        length > 2 && arePointsEqual(state.points[0], action.payload);
-    if (needToBeClosed)
-      return [{ points: [...state.points], closed: true }, true];
-    return [
-      { points: [...state.points, action.payload], closed: false },
-      true,
-    ];
-  }
-  case pathActions.DELETE: {
-    return [
-      {
-        points: [
-          ...state.points.filter((_, idx) => action.payload !== idx),
-        ],
-        closed: length > 4 && state.closed,
-      },
-      true,
-    ];
-  }
-  case pathActions.MODIFY: {
-    const { x: sx, y: sy } = state.points[action.payload.index];
-    const newPoints = state.points.map(({ x, y }) => {
-      if (x === sx && y === sy) {
-        return {
-          x: action.payload.x,
-          y: action.payload.y,
-        };
+    case pathActions.ADD: {
+      if (state.closed) return [state, false];
+      if (
+        (length > 0 && arePointsEqual(state.points[length - 1], action.payload)) ||
+        (length > 1 && arePointsEqual(state.points[length - 2], action.payload))
+      ) {
+        return [state, false];
       }
-      return { x, y };
-    });
-    return [
-      { points: newPoints, closed: state.closed },
-      !!(action.payload.x || action.payload.y),
-    ];
-  }
-  case pathActions.MOVE: {
-    return [
-      {
-        points: state.points.map(({ x, y }) => ({
-          x: x + action.payload.x,
-          y: y + action.payload.y,
-        })),
-        closed: state.closed,
-      },
-      !!(action.payload.x || action.payload.y),
-    ];
-  }
-  case pathActions.CHANGE: {
-    const wasModified = !arePointListEqual(action.payload, state.points);
-    return [{ points: action.payload, closed: wasModified ? action.payload.length > 2 : state.closed }, wasModified];
-  }
-  case pathActions.RESET:
-    return [{ points: [], closed: false }, !!(state.points.length)];
-  default:
-    return [state, false];
+      const needToBeClosed = length > 2 && arePointsEqual(state.points[0], action.payload);
+      if (needToBeClosed) return [{ points: [...state.points], closed: true }, true];
+      return [{ points: [...state.points, action.payload], closed: false }, true];
+    }
+    case pathActions.DELETE: {
+      return [
+        {
+          points: [...state.points.filter((_, idx) => action.payload !== idx)],
+          closed: length > 4 && state.closed
+        },
+        true
+      ];
+    }
+    case pathActions.MODIFY: {
+      const { x: sx, y: sy } = state.points[action.payload.index];
+      const newPoints = state.points.map(({ x, y }) => {
+        if (x === sx && y === sy) {
+          return {
+            x: action.payload.x,
+            y: action.payload.y
+          };
+        }
+        return { x, y };
+      });
+      return [
+        { points: newPoints, closed: state.closed },
+        !!(action.payload.x || action.payload.y)
+      ];
+    }
+    case pathActions.MOVE: {
+      return [
+        {
+          points: state.points.map(({ x, y }) => ({
+            x: x + action.payload.x,
+            y: y + action.payload.y
+          })),
+          closed: state.closed
+        },
+        !!(action.payload.x || action.payload.y)
+      ];
+    }
+    case pathActions.CHANGE: {
+      const wasModified = !arePointListEqual(action.payload, state.points);
+      return [
+        {
+          points: action.payload,
+          closed: wasModified ? action.payload.length > 2 : state.closed
+        },
+        wasModified
+      ];
+    }
+    case pathActions.RESET:
+      return [{ points: [], closed: false }, !!state.points.length];
+    default:
+      return [state, false];
   }
 }
