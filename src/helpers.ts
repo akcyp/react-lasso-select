@@ -70,6 +70,16 @@ export const approximateToAngles = (
   return endPoint;
 };
 
+export const calculateAnglesBeetwenPoints = (points: Point[]) => {
+  const angles: number[] = [];
+  for (let i = 1; i < points.length; i++) {
+    const alpha = Math.atan2(points[i].y - points[i - 1].y, points[i].x - points[i - 1].x);
+    const alpha2 = alpha + Math.PI;
+    angles.push(alpha, alpha2 > Math.PI ? alpha2 - 2 * Math.PI : alpha2);
+  }
+  return angles.filter((val, idx, ths) => ths.indexOf(val) === idx);
+};
+
 export function getClippedImageCanvas(
   src: string,
   path: Point[],

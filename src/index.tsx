@@ -16,7 +16,8 @@ import {
   touchOrMouseEvent,
   Size,
   approximateToAnAngleMultiplicity,
-  approximateToAngles
+  approximateToAngles,
+  calculateAnglesBeetwenPoints
 } from './helpers';
 
 import { pathReducer, pathActions, pathReducerAction } from './pathReducer';
@@ -203,18 +204,6 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       pointer: { x, y }
     });
   }
-  calculatePointsAngles() {
-    const angles: number[] = [];
-    for (let i = 1; i < this.path.points.length; i++) {
-      const alpha = Math.atan2(
-        this.path.points[i].y - this.path.points[i - 1].y,
-        this.path.points[i].x - this.path.points[i - 1].x
-      );
-      const alpha2 = alpha + Math.PI;
-      angles.push(alpha, alpha2 > Math.PI ? alpha2 - 2 * Math.PI : alpha2);
-    }
-    return angles.filter((val, idx, ths) => ths.indexOf(val) === idx);
-  }
   dispatchPathAction(action: pathReducerAction & { pointer?: Point }) {
     const wasClosedBefore = this.path.closed;
     const [newPathState, wasModified] = pathReducer(this.path, action);
@@ -225,7 +214,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       pointer: action.pointer || this.path.points[this.path.points.length - 1] || { x: 0, y: 0 },
       path: newPathState
     });
-    this.angles = this.calculatePointsAngles();
+    this.angles = calculateAnglesBeetwenPoints(newPathState.points);
     this.emitOnChange(newPathState);
     if (
       [pathActions.RESET, pathActions.CHANGE, pathActions.ADD, pathActions.DELETE].includes(
