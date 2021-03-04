@@ -5,16 +5,22 @@ import { Point } from './helpers';
 export interface SVGPointProps extends Point {
   style: React.CSSProperties;
   draggable: boolean;
+  onClick: (e: React.MouseEvent) => void;
 }
 
 export const SVGPoint = withDraggable(
-  React.forwardRef<SVGRectElement, SVGPointProps>(function SVGPoint({ x, y, style }, ref) {
+  React.forwardRef<SVGRectElement, SVGPointProps>(function SVGPoint({ x, y, onClick, style }, ref) {
     return (
       <rect
         style={style}
         ref={ref}
         x={x - 10}
         y={y - 10}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          onClick(e);
+        }}
         width="20px"
         height="20"
         fill="rgba(0, 0, 0, 0)"

@@ -143,6 +143,13 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
               }}
               onDrag={({ dx, dy }) => this.onPointDrag(idx, { dx, dy })}
               onDragEnd={this.onDragEnd}
+              onClick={() => {
+                if (!this.isLoaded() || this.props.disabled || this.path.closed) return;
+                this.dispatchPathAction({
+                  type: pathActions.ADD,
+                  payload: this.path.points[idx]
+                });
+              }}
             />
           ))}
         </svg>
@@ -217,6 +224,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       this.path,
       action
     );
+    newPathState.points = newPathState.points.map(point => roundPointCoordinates(point, 1e3));
     this.path = newPathState;
     if (!wasModified) return;
     this.setState({
