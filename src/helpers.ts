@@ -38,6 +38,38 @@ export const roundPointCoordinates = ({ x, y }: Point, p = 1): Point => ({
   y: Math.round((y + Number.EPSILON) * p) / p
 });
 
+export const approximateToAnAngleMultiplicity = (
+  startPoint: Point,
+  endPoint: Point,
+  minAngle: number
+): Point => {
+  const r = Math.hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y);
+  const angle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
+  const newAngle = Math.round(angle / minAngle) * minAngle;
+  return {
+    x: startPoint.x + r * Math.cos(newAngle),
+    y: startPoint.y + r * Math.sin(newAngle)
+  };
+};
+
+export const approximateToAngles = (
+  startPoint: Point,
+  endPoint: Point,
+  angles: number[]
+): Point => {
+  const r = Math.hypot(endPoint.x - startPoint.x, endPoint.y - startPoint.y);
+  const angle = Math.atan2(endPoint.y - startPoint.y, endPoint.x - startPoint.x);
+  const nearestAngle = angles.reduce(
+    (prev, now) => (Math.abs(now - angle) < Math.abs(prev - angle) ? now : prev),
+    Infinity
+  );
+  if (nearestAngle !== Infinity) {
+    endPoint.x = startPoint.x + r * Math.cos(nearestAngle);
+    endPoint.y = startPoint.y + r * Math.sin(nearestAngle);
+  }
+  return endPoint;
+};
+
 export function getClippedImageCanvas(
   src: string,
   path: Point[],

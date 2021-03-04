@@ -14,7 +14,9 @@ import {
   Point,
   Vector,
   touchOrMouseEvent,
-  Size
+  Size,
+  approximateToAnAngleMultiplicity,
+  approximateToAngles
 } from './helpers';
 
 import { pathReducer, pathActions, pathReducerAction } from './pathReducer';
@@ -301,26 +303,12 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       const lastPoint = this.path.points[this.path.points.length - 1];
       // straighten path from last point
       if (ctrlCmdPressed && lastPoint) {
-        const r = Math.hypot(pointer.x - lastPoint.x, pointer.y - lastPoint.y);
-        const angle = Math.atan2(pointer.y - lastPoint.y, pointer.x - lastPoint.x);
         if (e.shiftKey) {
           // lookup for parallel lines
-          if (this.path.points.length > 1) {
-            const nearestAngle = this.angles.reduce(
-              (prev, now) => (Math.abs(now - angle) < Math.abs(prev - angle) ? now : prev),
-              Infinity
-            );
-            if (nearestAngle !== Infinity) {
-              pointer.x = lastPoint.x + r * Math.cos(nearestAngle);
-              pointer.y = lastPoint.y + r * Math.sin(nearestAngle);
-            }
-          }
+          pointer = approximateToAngles(lastPoint, pointer, this.angles);
         } else {
-          const minAngle = Math.PI / 12;
           // angle approximation to 15 deg
-          const newAngle = Math.round(angle / minAngle) * minAngle;
-          pointer.x = lastPoint.x + r * Math.cos(newAngle);
-          pointer.y = lastPoint.y + r * Math.sin(newAngle);
+          pointer = approximateToAnAngleMultiplicity(lastPoint, pointer, Math.PI / 12);
         }
       }
     }
