@@ -17,7 +17,8 @@ import {
   Size,
   approximateToAnAngleMultiplicity,
   approximateToAngles,
-  calculateAnglesBeetwenPoints
+  calculateAnglesBeetwenPoints,
+  findPointByPosition
 } from './helpers';
 
 import { pathReducer, pathActions, pathReducerAction } from './pathReducer';
@@ -142,13 +143,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
               }}
               onDrag={({ dx, dy }) => this.onPointDrag(idx, { dx, dy })}
               onDragEnd={this.onDragEnd}
-              onClick={() => {
-                if (!this.isLoaded() || this.props.disabled || this.path.closed) return;
-                this.dispatchPathAction({
-                  type: pathActions.ADD,
-                  payload: this.path.points[idx]
-                });
-              }}
+              onClick={() => this.onPointClick(idx)}
             />
           ))}
         </svg>
@@ -176,6 +171,15 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       y: Math.round(y / aspectRatio.y)
     }));
   }
+  checkIfPathUpdated(wasClosedBefore: boolean) {
+    if (this.path.closed || wasClosedBefore) {
+      const convertedPoints = this.convertPoints(this.path.points);
+      if (!arePointListEqual(convertedPoints, this.lastUpdatedPoints)) {
+        this.emitOnComplete(convertedPoints);
+        this.lastUpdatedPoints = convertedPoints.map(({ x, y }) => ({ x, y }));
+      }
+    }
+  }
   emitOnChange({ points }: ReactLassoPathState) {
     if (this.props.onChange) {
       const convertedPoints = this.convertPoints(points);
@@ -188,40 +192,36 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       this.props.onComplete(convertedPoints);
     }
   }
-  checkIfPathUpdated(wasClosedBefore: boolean) {
-    if (this.path.closed || wasClosedBefore) {
-      const convertedPoints = this.convertPoints(this.path.points);
-      if (!arePointListEqual(convertedPoints, this.lastUpdatedPoints)) {
-        this.emitOnComplete(convertedPoints);
-        this.lastUpdatedPoints = convertedPoints.map(({ x, y }) => ({ x, y }));
-      }
+  setPointer({ x, y }: Point, force = false) {
+    if (force || !this.props.disabled) {
+      this.setState({
+        path: this.path,
+        pointer: { x, y }
+      });
     }
   }
-  setPointer({ x, y }: Point, force = false) {
-    if (this.props.disabled && !force) return;
-    this.setState({
-      path: this.path,
-      pointer: { x, y }
-    });
-  }
+  hidePointer = () => {
+    const lastPoint = this.path.points[this.path.points.length - 1] || {
+      x: 0,
+      y: 0
+    };
+    this.setPointer({ ...lastPoint }, true); // tricky way to hide pointer line
+  };
   dispatchPathAction(action: pathReducerAction & { pointer?: Point }) {
     const wasClosedBefore = this.path.closed;
     const [newPathState, wasModified] = pathReducer(this.path, action);
     newPathState.points = newPathState.points.map((point) => roundPointCoordinates(point, 1e3));
-    this.path = newPathState;
-    if (!wasModified) return;
-    this.setState({
-      pointer: action.pointer || this.path.points[this.path.points.length - 1] || { x: 0, y: 0 },
-      path: newPathState
-    });
-    this.angles = calculateAnglesBeetwenPoints(newPathState.points);
-    this.emitOnChange(newPathState);
-    if (
-      [pathActions.RESET, pathActions.CHANGE, pathActions.ADD, pathActions.DELETE].includes(
-        action.type
-      )
-    ) {
-      this.checkIfPathUpdated(wasClosedBefore); // optimized version of onChange
+    if (wasModified) {
+      this.path = newPathState;
+      this.setState({
+        pointer: action.pointer || this.path.points[this.path.points.length - 1] || { x: 0, y: 0 },
+        path: newPathState
+      });
+      this.angles = calculateAnglesBeetwenPoints(newPathState.points);
+      this.emitOnChange(newPathState);
+      if (![pathActions.MODIFY, pathActions.MOVE].includes(action.type)) {
+        this.checkIfPathUpdated(wasClosedBefore); // optimized version of onChange
+      }
     }
   }
   isLoaded() {
@@ -275,12 +275,6 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       this.state.path.closed ? roundedPoints[0] : roundPointCoordinates(this.state.pointer)
     );
   }
-  findPointByPosition(x: number, y: number, r = 0): { point: Point; index: number } {
-    const index = this.path.points.findIndex(
-      (point) => Math.max(Math.abs(point.x - x), Math.abs(point.y - y)) <= r
-    );
-    return { point: { ...this.path.points[index] }, index };
-  }
   getMousePosition(
     e: touchOrMouseEvent<SVGSVGElement>,
     lookupForNearlyPoints = true,
@@ -301,7 +295,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
         }
       }
     }
-    const { point, index } = this.findPointByPosition(pointer.x, pointer.y, 10);
+    const { point, index } = findPointByPosition(this.path.points, pointer, 10);
     if (lookupForNearlyPoints && index > -1) {
       pointer = { ...point };
     }
@@ -332,6 +326,13 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       });
     }
   };
+  onPointClick = (idx: number) => {
+    if (!this.isLoaded() || this.props.disabled || this.path.closed) return;
+    this.dispatchPathAction({
+      type: pathActions.ADD,
+      payload: this.path.points[idx]
+    });
+  };
   onDragEnd = () => {
     this.checkIfPathUpdated(false);
   };
@@ -347,13 +348,6 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     this.dispatchPathAction({ type: pathActions.RESET });
     this.imgError = true;
     this.props.onImageError(e);
-  };
-  hidePointer = () => {
-    const lastPoint = this.path.points[this.path.points.length - 1] || {
-      x: 0,
-      y: 0
-    };
-    this.setPointer({ ...lastPoint }, true); // tricky way to hide pointer line
   };
   onClickTouchEvent = (e: touchOrMouseEvent<SVGSVGElement>) => {
     if (!this.isLoaded()) return;

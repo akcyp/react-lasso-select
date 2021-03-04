@@ -38,6 +38,17 @@ export const roundPointCoordinates = ({ x, y }: Point, p = 1): Point => ({
   y: Math.round((y + Number.EPSILON) * p) / p
 });
 
+export const findPointByPosition = (
+  points: Point[],
+  position: Point,
+  r = 0
+): { point: Point; index: number } => {
+  const index = points.findIndex(
+    (point) => Math.max(Math.abs(point.x - position.x), Math.abs(point.y - position.y)) <= r
+  );
+  return { point: { ...points[index] }, index };
+};
+
 export const approximateToAnAngleMultiplicity = (
   startPoint: Point,
   endPoint: Point,
