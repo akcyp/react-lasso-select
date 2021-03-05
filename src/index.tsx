@@ -327,11 +327,12 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     }
   };
   onPointClick = (idx: number) => {
-    if (!this.isLoaded() || this.props.disabled || this.path.closed) return;
-    this.dispatchPathAction({
-      type: pathActions.ADD,
-      payload: this.path.points[idx]
-    });
+    if (this.isLoaded() && !this.props.disabled && !this.path.closed) {
+      this.dispatchPathAction({
+        type: pathActions.ADD,
+        payload: this.path.points[idx]
+      });
+    }
   };
   onDragEnd = () => {
     this.checkIfPathUpdated(false);
@@ -350,25 +351,25 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     this.props.onImageError(e);
   };
   onClickTouchEvent = (e: touchOrMouseEvent<SVGSVGElement>) => {
-    if (!this.isLoaded()) return;
-    if (this.props.disabled) return;
-    if (this.path.closed) {
-      if (e.target === this.svgRef.current) {
-        this.dispatchPathAction({
-          type: pathActions.RESET
-        });
+    if (this.isLoaded() && !this.props.disabled) {
+      if (this.path.closed) {
+        if (e.target === this.svgRef.current) {
+          this.dispatchPathAction({
+            type: pathActions.RESET
+          });
+        }
+        return;
       }
-      return;
-    }
-    const [pointer] = this.getMousePosition(e);
-    if (!this.svg.isAboveTheBorder(pointer)) {
-      this.dispatchPathAction({
-        type: pathActions.ADD,
-        payload: roundPointCoordinates(pointer, 1e3),
-        pointer
-      });
-    } else {
-      this.hidePointer();
+      const [pointer] = this.getMousePosition(e);
+      if (!this.svg.isAboveTheBorder(pointer)) {
+        this.dispatchPathAction({
+          type: pathActions.ADD,
+          payload: roundPointCoordinates(pointer, 1e3),
+          pointer
+        });
+      } else {
+        this.hidePointer();
+      }
     }
   };
   onClick = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
@@ -381,23 +382,26 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     }
   };
   onMouseMove = (e: touchOrMouseEvent<SVGSVGElement>) => {
-    if (!this.isLoaded()) return;
-    const [pointer] = this.getMousePosition(e);
-    this.setPointer(pointer);
+    if (this.isLoaded()) {
+      const [pointer] = this.getMousePosition(e);
+      this.setPointer(pointer);
+    }
   };
   onContextMenu = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    if (!this.isLoaded()) return;
-    e.preventDefault();
-    if (this.props.disabled || this.path.closed) return;
-    const [pointer, { index }] = this.getMousePosition(e);
-    if (index > -1) {
-      this.dispatchPathAction({
-        type: pathActions.DELETE,
-        payload: index,
-        pointer
-      });
-    } else {
-      this.setPointer(pointer);
+    if (this.isLoaded()) {
+      e.preventDefault();
+      if (!this.props.disabled && !this.path.closed) {
+        const [pointer, { index }] = this.getMousePosition(e);
+        if (index > -1) {
+          this.dispatchPathAction({
+            type: pathActions.DELETE,
+            payload: index,
+            pointer
+          });
+        } else {
+          this.setPointer(pointer);
+        }
+      }
     }
   };
   static propTypes = {
