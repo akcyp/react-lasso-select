@@ -21,7 +21,7 @@ import {
   findPointByPosition
 } from './helpers';
 
-import { pathReducer, pathActions, pathReducerAction } from './pathReducer';
+import { pathReducer, pathActions, pathReducerAction, PathState } from './pathReducer';
 
 export interface ReactLassoProps {
   src: string;
@@ -38,12 +38,8 @@ export interface ReactLassoProps {
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
 }
 
-export interface ReactLassoPathState {
-  points: Point[];
-  closed: boolean;
-}
 export interface ReactLassoState {
-  path: ReactLassoPathState;
+  path: PathState;
   pointer: Point;
 }
 
@@ -53,7 +49,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
   public svgRef = React.createRef<SVGSVGElement>();
   public svg = new SVGHelper(() => this.svgRef?.current);
   public angles: number[] = [];
-  public path: ReactLassoPathState = {
+  public path: PathState = {
     points: [],
     closed: false
   };
@@ -180,7 +176,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       }
     }
   }
-  emitOnChange({ points }: ReactLassoPathState) {
+  emitOnChange({ points }: PathState) {
     if (this.props.onChange) {
       const convertedPoints = this.convertPoints(points);
       this.lastEmittedPoints = convertedPoints;

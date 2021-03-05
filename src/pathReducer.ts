@@ -1,4 +1,3 @@
-import { ReactLassoPathState } from '.';
 import { arePointListEqual, arePointsEqual, Point } from './helpers';
 
 export enum pathActions {
@@ -17,11 +16,12 @@ export type pathReducerAction =
   | { type: pathActions.MOVE; payload: Point }
   | { type: pathActions.RESET }
   | { type: pathActions.CHANGE; payload: Point[] };
+export interface PathState {
+  points: Point[];
+  closed: boolean;
+}
 
-export function pathReducer(
-  state: ReactLassoPathState,
-  action: pathReducerAction
-): [ReactLassoPathState, boolean] {
+export function pathReducer(state: PathState, action: pathReducerAction): [PathState, boolean] {
   const length = state.points.length;
   switch (action.type) {
     case pathActions.ADD: {
