@@ -1,6 +1,8 @@
 import { SVGHelper } from '../SVGHelpers';
 
-test('SVGHelper null/undefined Error', () => {
-  expect(() => new SVGHelper(() => null).getSvg()).toThrowError();
-  expect(() => new SVGHelper(() => undefined).getSvg()).toThrowError();
+describe('SVGHelper', () => {
+  test('with null/undefined should throw Error', () => {
+    expect(() => new SVGHelper(() => null).getSvg()).toThrowError();
+    expect(() => new SVGHelper(() => undefined).getSvg()).toThrowError();
+  });
 });
