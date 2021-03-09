@@ -41,21 +41,21 @@ describe('arePointListEqual', () => {
 
 describe('roundPointCoordinates', () => {
   test('should round the coordinates of a point', () => {
-    expect(roundPointCoordinates({ x: 1.999, y: 1.00001 }, 100)).toEqual({ x: 2, y: 1 });
+    expect(roundPointCoordinates({ x: 1.999, y: 1.00001 }, 100)).toStrictEqual({ x: 2, y: 1 });
   });
 });
 
 describe('findPointByPosition', () => {
-  const points = [
+  const pointsFactory = () => [
     [10, 10],
     [20, 20],
     [30, 30]
   ].map(([x, y]) => ({ x, y }));
   test('should find point with radius', () => {
-    expect(findPointByPosition(points, { x: 21, y: 21 }, 1)).toEqual({ point: points[1], index: 1 });
+    expect(findPointByPosition(pointsFactory(), { x: 21, y: 21 }, 1)).toStrictEqual({ point: pointsFactory()[1], index: 1 });
   });
   test('should not find point', () => {
-    expect(findPointByPosition(points, { x: 21, y: 21 })).toEqual({
+    expect(findPointByPosition(pointsFactory(), { x: 21, y: 21 })).toStrictEqual({
       point: { x: NaN, y: NaN },
       index: -1
     });
@@ -79,7 +79,7 @@ describe('getAngle', () => {
 
 describe('approximateToAnAngleMultiplicity', () => {
   test('should approximate point using another point and angle', () => {
-    expect(approximateToAnAngleMultiplicity({ x: 0, y: 0 }, { x: 2, y: 2 }, Math.PI)).toEqual({
+    expect(approximateToAnAngleMultiplicity({ x: 0, y: 0 }, { x: 2, y: 2 }, Math.PI)).toStrictEqual({
       x: Math.hypot(2, 2),
       y: 0
     });
