@@ -58,8 +58,9 @@ export const withDraggable = <P extends object>(Component: React.ComponentType<P
     }
     onMouseTouchDown = (e: TouchEvent | MouseEvent) => {
       if (e.target === this.ref.current && this.props.draggable) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
         const target = e.target as EventTarget & SVGSVGElement;
-        e.stopPropagation();
         this.dragLastPosition = this.getMousePosition(e);
         if (target.ownerSVGElement) {
           target.ownerSVGElement.focus({ preventScroll: true });
@@ -68,7 +69,8 @@ export const withDraggable = <P extends object>(Component: React.ComponentType<P
     };
     onMouseTouchMove = (e: TouchEvent | MouseEvent) => {
       if (this.dragLastPosition) {
-        e.stopPropagation();
+        e.stopImmediatePropagation();
+        e.preventDefault();
         const { x, y } = this.getMousePosition(e);
         const dx = x - this.dragLastPosition.x;
         const dy = y - this.dragLastPosition.y;
@@ -89,7 +91,8 @@ export const withDraggable = <P extends object>(Component: React.ComponentType<P
     };
     onMouseTouchUp = (e: TouchEvent | MouseEvent) => {
       if (this.dragLastPosition && this.wasMoved) {
-        e.stopPropagation();
+        e.stopImmediatePropagation();
+        e.preventDefault();
         if (e instanceof MouseEvent || !e.touches) {
           window.addEventListener('click', (e) => e.stopPropagation(), {
             capture: true,
@@ -102,9 +105,6 @@ export const withDraggable = <P extends object>(Component: React.ComponentType<P
             y: this.dragLastPosition.y
           });
         }
-      }
-      if (e instanceof TouchEvent && (e.changedTouches || e.cancelable)) {
-        e.preventDefault();
       }
       this.dragLastPosition = null;
       this.wasMoved = false;

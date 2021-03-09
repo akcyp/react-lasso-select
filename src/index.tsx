@@ -110,8 +110,8 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
             touchAction: 'none'
           }}
           viewBox={`0 0 ${this.props.viewBox.width} ${this.props.viewBox.height}`}
-          onMouseMove={this.onMouseMove}
-          onTouchMove={this.onMouseMove}
+          onMouseMove={this.onMouseTouchMove}
+          onTouchMove={this.onMouseTouchMove}
           onClick={this.onClick}
           onTouchEnd={this.onTouchEnd}
           onContextMenu={this.onContextMenu}
@@ -139,7 +139,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
               }}
               onDrag={({ dx, dy }) => this.onPointDrag(idx, { dx, dy })}
               onDragEnd={this.onDragEnd}
-              onClick={() => this.onPointClick(idx)}
+              onClickTouchEvent={() => this.onPointClick(idx)}
             />
           ))}
         </svg>
@@ -317,8 +317,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     if (!this.svg.isAboveTheBorder(point)) {
       this.dispatchPathAction({
         type: pathActions.MODIFY,
-        payload: { ...point, index: idx },
-        pointer: point
+        payload: { ...point, index: idx }
       });
     }
   };
@@ -376,8 +375,9 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       e.preventDefault();
       this.onClickTouchEvent(e);
     }
+    this.hidePointer();
   };
-  onMouseMove = (e: touchOrMouseEvent<SVGSVGElement>) => {
+  onMouseTouchMove = (e: touchOrMouseEvent<SVGSVGElement>) => {
     if (this.isLoaded()) {
       const [pointer] = this.getMousePosition(e);
       this.setPointer(pointer);

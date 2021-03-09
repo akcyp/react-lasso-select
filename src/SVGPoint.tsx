@@ -5,12 +5,12 @@ import { Point } from './helpers';
 export interface SVGPointProps extends Point {
   style: React.CSSProperties;
   draggable: boolean;
-  onClick: (e: React.MouseEvent) => void;
+  onClickTouchEvent: (e: React.MouseEvent | React.TouchEvent) => void;
 }
 
 export const SVGPoint = withDraggable(
   React.forwardRef<SVGRectElement, SVGPointProps>(function SVGPoint(
-    { x, y, onClick, draggable, style },
+    { x, y, onClickTouchEvent, draggable, style },
     ref
   ) {
     const { cursor = draggable ? 'move' : 'default', ...rest } = style;
@@ -26,7 +26,12 @@ export const SVGPoint = withDraggable(
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
-          onClick(e);
+          onClickTouchEvent(e);
+        }}
+        onTouchEnd={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          onClickTouchEvent(e);
         }}
         width="20px"
         height="20"
