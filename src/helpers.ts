@@ -46,7 +46,7 @@ export const findPointByPosition = (
   const index = points.findIndex(
     (point) => Math.max(Math.abs(point.x - position.x), Math.abs(point.y - position.y)) <= r
   );
-  return { point: { ...points[index] }, index };
+  return { point: { ...(points[index] || { x: NaN, y: NaN }) }, index };
 };
 
 export const getDistance = (p1: Point, p2: Point) => {
