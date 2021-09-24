@@ -11,7 +11,16 @@ export class SVGHelper {
     return svg;
   }
   getCTM() {
-    const ctm = this.getSvg().getCTM();
+    const svg = this.getSvg();
+    let ctm = svg.getCTM();
+    if (ctm === null) {
+      const svgChild = svg.querySelector('polyline');
+      const matrix = svgChild?.getCTM();
+      if (matrix) {
+        matrix.f = 0;
+        ctm = matrix;
+      }
+    }
     if (!ctm) throw new Error('CTM is null');
     return ctm;
   }
