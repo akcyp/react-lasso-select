@@ -5,7 +5,9 @@ const input = 'src/index.tsx';
 
 const plugins = [
   typescript({
-    typescript: require('typescript'),
+    tsconfigOverride: {
+      exclude: ['**/__tests__', '**/*.test.ts']
+    }
   })
 ];
 
