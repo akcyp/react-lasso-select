@@ -28,9 +28,11 @@ export class SVGHelper {
     return this.getSvg().viewBox.baseVal;
   }
   getRealSize(): Size {
+    const svg = this.getSvg();
+    // Firefox have problems with SVGSVGElement.width.baseVal.value
     return {
-      width: this.getSvg().width.baseVal.value,
-      height: this.getSvg().height.baseVal.value
+      width: svg.clientWidth,
+      height: svg.clientHeight
     };
   }
   getViewboxOffset(): Point {
