@@ -14,12 +14,9 @@ export class SVGHelper {
     const svg = this.getSvg();
     let ctm = svg.getCTM();
     if (ctm === null) {
-      const svgChild = svg.querySelector('polyline');
-      const matrix = svgChild?.getCTM();
-      if (matrix) {
-        matrix.f = 0;
-        ctm = matrix;
-      }
+      // https://www.w3.org/TR/SVGTiny12/coords.html#TransformMatrixDefined
+      const svgChild = svg.querySelector('rect[visibility="hidden"]') as SVGRectElement;
+      ctm = svgChild.getCTM();
     }
     if (!ctm) throw new Error('CTM is null');
     return ctm;

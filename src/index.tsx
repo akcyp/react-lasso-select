@@ -117,6 +117,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
           onContextMenu={this.onContextMenu}
           onMouseLeave={this.hidePointer}
         >
+          <rect visibility="hidden" />
           {!!this.state.path.points.length && <SVGPolygon path={this.getPolygonPoints()} />}
           <SVGPolyline
             draggable={this.state.path.closed && !this.props.disabled}
