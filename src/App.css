@@ -1,0 +1,36 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: #fdebc8;
+}
+
+.main {
+  padding: 6px;
+}
+
+.points {
+  margin: 0;
+}
+
+.component {
+  padding-bottom: 10px;
+  border-bottom: 1px solid;
+}
+
+.controls {
+  padding-top: 10px;
+}
+
+.control {
+  display: flex;
+}
+
+.minimap {
+  width: 200px;
+  border: 1px solid;
+}
+
+.clipped-image {
+  border: 1px solid;
+  width: fit-content;
+}

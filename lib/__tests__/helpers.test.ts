@@ -1,3 +1,4 @@
+import { describe, test, expect } from 'vitest';
 import {
   // getClippedImageCanvas,
   objectToClassName,
@@ -46,13 +47,17 @@ describe('roundPointCoordinates', () => {
 });
 
 describe('findPointByPosition', () => {
-  const pointsFactory = () => [
-    [10, 10],
-    [20, 20],
-    [30, 30]
-  ].map(([x, y]) => ({ x, y }));
+  const pointsFactory = () =>
+    [
+      [10, 10],
+      [20, 20],
+      [30, 30]
+    ].map(([x, y]) => ({ x, y }));
   test('should find point with radius', () => {
-    expect(findPointByPosition(pointsFactory(), { x: 21, y: 21 }, 1)).toStrictEqual({ point: pointsFactory()[1], index: 1 });
+    expect(findPointByPosition(pointsFactory(), { x: 21, y: 21 }, 1)).toStrictEqual({
+      point: pointsFactory()[1],
+      index: 1
+    });
   });
   test('should not find point', () => {
     expect(findPointByPosition(pointsFactory(), { x: 21, y: 21 })).toStrictEqual({
@@ -79,10 +84,12 @@ describe('getAngle', () => {
 
 describe('approximateToAnAngleMultiplicity', () => {
   test('should approximate point using another point and angle', () => {
-    expect(approximateToAnAngleMultiplicity({ x: 0, y: 0 }, { x: 2, y: 2 }, Math.PI)).toStrictEqual({
-      x: Math.hypot(2, 2),
-      y: 0
-    });
+    expect(approximateToAnAngleMultiplicity({ x: 0, y: 0 }, { x: 2, y: 2 }, Math.PI)).toStrictEqual(
+      {
+        x: Math.hypot(2, 2),
+        y: 0
+      }
+    );
     const { x, y } = approximateToAnAngleMultiplicity({ x: 0, y: 0 }, { x: 3, y: 4 }, Math.PI / 4);
     expect(x).toBeCloseTo(3.5, 1);
     expect(y).toBeCloseTo(3.5, 1);
@@ -91,7 +98,10 @@ describe('approximateToAnAngleMultiplicity', () => {
 
 describe('approximateToAngles', () => {
   test('should approximate point using another point and array of angles', () => {
-    const { x, y } = approximateToAngles({ x: 0, y: 0 }, { x: 0, y: 2 }, [Math.PI / 3, Math.PI / 2]);
+    const { x, y } = approximateToAngles({ x: 0, y: 0 }, { x: 0, y: 2 }, [
+      Math.PI / 3,
+      Math.PI / 2
+    ]);
     expect(x).toBeCloseTo(0);
     expect(y).toBeCloseTo(2);
   });
