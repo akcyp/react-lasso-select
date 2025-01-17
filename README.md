@@ -37,14 +37,16 @@ npm i react-lasso-select
 Import the main js module:
 
 ```js
-import ReactLassoSelect from 'react-lasso-select';
+import { ReactLassoSelect } from 'react-lasso-select';
 ```
 
 ## Example
 
+See: [https://github.com/akcyp/react-lasso-select/blob/main/src/App.tsx](https://github.com/akcyp/react-lasso-select/blob/main/src/App.tsx)
+
 ```jsx
 import { useState } from 'react';
-import ReactLassoSelect, { getCanvas } from 'react-lasso-select';
+import { ReactLassoSelect, getCanvas } from 'react-lasso-select';
 
 export default function App() {
   const src = './demo.jpg';
