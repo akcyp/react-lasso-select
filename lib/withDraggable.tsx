@@ -10,7 +10,6 @@ export interface WithDraggableProps {
   onDragEnd?: (arg: Point) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/ban-types
 export const withDraggable = <P extends object>(Component: React.ComponentType<P>) =>
   class DraggableHOC extends React.Component<P & WithDraggableProps> {
     public ref = React.createRef<SVGSVGElement>();
@@ -18,6 +17,7 @@ export const withDraggable = <P extends object>(Component: React.ComponentType<P
     public dragLastPosition: null | Point = null;
     public wasMoved = false;
     render() {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { draggable, onDrag, onDragStart, onDragEnd, ...rest } = this.props;
       return <Component ref={this.ref} {...(rest as P)} draggable={draggable} />;
     }
@@ -53,7 +53,7 @@ export const withDraggable = <P extends object>(Component: React.ComponentType<P
       window.removeEventListener('touchend', this.onMouseTouchUp);
     }
     getMousePosition(ev: TouchEvent | MouseEvent) {
-      const e = (ev as unknown) as touchOrMouseEvent<SVGSVGElement>;
+      const e = ev as unknown as touchOrMouseEvent<SVGSVGElement>;
       return this.svg.getMouseCoordinates(e);
     }
     onMouseTouchDown = (e: TouchEvent | MouseEvent) => {

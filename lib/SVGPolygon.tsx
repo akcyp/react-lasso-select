@@ -1,4 +1,3 @@
-import React from 'react';
 import { Point } from './helpers';
 
 export interface SVGPolygonProps {

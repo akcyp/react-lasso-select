@@ -9,11 +9,7 @@ A responsive react tool for marking irregular areas in images (lasso / free sele
 
 ## Demos
 
-- [Simple demo](https://codesandbox.io/s/react-lasso-select-issue2-h92hn?file=/src/App.tsx)
-
-- [Demo with typescript](https://codesandbox.io/s/react-lasso-select-demo-using-typescript-and-react-hooks-kddyt)
-
-- [Advanced demo](https://codesandbox.io/s/react-lasso-select-advanced-demo-g0yn4?file=/src/App.tsx)
+See `src/App.tsx`
 
 ## Features
 
@@ -50,7 +46,7 @@ import ReactLassoSelect from 'react-lasso-select';
 import { useState } from 'react';
 import ReactLassoSelect, { getCanvas } from 'react-lasso-select';
 
-export default function App () {
+export default function App() {
   const src = './demo.jpg';
   const [points, setPoints] = useState([]);
   const [clippedImg, setClippedImg] = useState();
@@ -59,10 +55,10 @@ export default function App () {
       <ReactLassoSelect
         value={points}
         src={src}
-        onChange={value => {
+        onChange={(value) => {
           setPoints(value);
         }}
-        onComplete={value => {
+        onComplete={(value) => {
           if (!value.length) return;
           getCanvas(src, value, (err, canvas) => {
             if (!err) {
@@ -71,9 +67,7 @@ export default function App () {
           });
         }}
       />
-      <div>
-        Points: {points.map(({x, y}) => `${x},${y}`).join(' ')}
-      </div>
+      <div>Points: {points.map(({ x, y }) => `${x},${y}`).join(' ')}</div>
       <div>
         <img src={clippedImg} alt="" />
       </div>
@@ -87,13 +81,14 @@ export default function App () {
 Most important props:
 
 - `src` (string) (required) Specifies the path to the image (or base64 string)
-- `value` (array of  {x: number, y: number}) Specifies input value
+- `value` (array of {x: number, y: number}) Specifies input value
 - `onComplete(path)` Callback fired every time path has been closed / updated / reset (use it for better performance insead of `onChange`)
 - `onChange(path)` Callback fired every time path has been changed (ex. point added/removed/replaced)
 
 Props related to component:
 
 - `disabled` (boolean, default false) Set to true to block selecting
+- `disabledShapeChange` (boolean, default false) Set to true to block shape change, but preserve possibility to move whole selection
 - `style` (object) CSS style attributes for component container
 - `viewBox` ({width: number, height: number}) Viewbox attribute for svg element, avoid changing the default value.
 

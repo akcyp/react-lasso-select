@@ -29,6 +29,7 @@ export interface ReactLassoProps {
   style: React.CSSProperties;
   viewBox: Size;
   disabled: boolean;
+  disabledShapeChange: boolean;
   imageStyle: React.CSSProperties;
   onImageLoad: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
   onImageError: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
@@ -131,7 +132,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
               key={idx}
               x={x}
               y={y}
-              draggable={!this.props.disabled}
+              draggable={!this.props.disabled && !this.props.disabledShapeChange}
               style={{
                 cursor:
                   !idx && this.state.path.points.length > 2 && !this.state.path.closed
@@ -414,6 +415,7 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
       height: PropTypes.number.isRequired
     }),
     disabled: PropTypes.bool,
+    disabledShapeChange: PropTypes.bool,
     onChange: PropTypes.func,
     onComplete: PropTypes.func,
     src: PropTypes.string.isRequired,
@@ -429,9 +431,11 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     imageStyle: {},
     viewBox: { width: 1e3, height: 1e3 },
     disabled: false,
+    disabledShapeChange: false,
     onImageError: Function.prototype,
     onImageLoad: Function.prototype
   };
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { ReactLasso as default, ReactLasso as Component, getClippedImageCanvas as getCanvas };

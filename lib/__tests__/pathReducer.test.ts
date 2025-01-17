@@ -1,3 +1,4 @@
+import { describe, test, expect } from 'vitest';
 import { pathReducer, pathActions } from '../pathReducer';
 
 describe('pathReducer action', () => {
@@ -27,13 +28,19 @@ describe('pathReducer action', () => {
 
   test('pathActions.DELETE} should delete point from list', () => {
     const [newPathState, wasModified] = pathReducer(
-      { closed: false, points: [{ x: 1, y: 1 }, { x: 2, y: 2 }] },
+      {
+        closed: false,
+        points: [
+          { x: 1, y: 1 },
+          { x: 2, y: 2 }
+        ]
+      },
       {
         type: pathActions.DELETE,
         payload: 0
       }
     );
-    expect(newPathState).toStrictEqual({ closed: false, points: [{ x: 2, y: 2}] });
+    expect(newPathState).toStrictEqual({ closed: false, points: [{ x: 2, y: 2 }] });
     expect(wasModified).toBe(true);
   });
 
