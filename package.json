@@ -1,6 +1,6 @@
 {
   "name": "react-lasso-select",
-  "version": "1.2.2",
+  "version": "2.0.0",
   "description": "A responsive react tool for marking irregular areas in images (lasso / free select)",
   "author": "akcyp",
   "license": "ISC",
@@ -21,11 +21,18 @@
   "bugs": {
     "url": "https://github.com/akcyp/react-lasso-select/issues"
   },
-  "main": "dist/index.cjs",
+  "main": "dist/index.js",
+  "types": "./dist/index.d.ts",
   "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "style": "dist/index.css",
   "files": [
-    "lib"
+    "dist"
   ],
   "type": "module",
   "scripts": {
@@ -35,7 +42,8 @@
     "format": "prettier -c .",
     "test": "vitest",
     "preview": "vite preview",
-    "prepare": "husky"
+    "prepare": "husky",
+    "prepublishOnly": "pnpm run build"
   },
   "peerDependencies": {
     "prop-types": "^15.8.1",

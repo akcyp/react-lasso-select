@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import ReactLassoSelect, { getCanvas } from '../lib/index';
+import { ReactLassoSelect, getCanvas } from '../dist/index';
 import src from './assets/demo.jpg';
 import './App.css';
 

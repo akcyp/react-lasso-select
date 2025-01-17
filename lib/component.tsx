@@ -1,4 +1,4 @@
-import React from 'react';
+import { type CSSProperties, type SyntheticEvent, Component, createRef } from 'react';
 import PropTypes from 'prop-types';
 
 import { SVGPolyline } from './SVGPolyline';
@@ -10,7 +10,6 @@ import {
   roundPointCoordinates,
   arePointListEqual,
   objectToClassName,
-  getClippedImageCanvas,
   Point,
   Vector,
   touchOrMouseEvent,
@@ -26,13 +25,13 @@ import { pathReducer, pathActions, pathReducerAction, PathState } from './pathRe
 export interface ReactLassoProps {
   src: string;
   value: Point[];
-  style: React.CSSProperties;
+  style: CSSProperties;
   viewBox: Size;
   disabled: boolean;
   disabledShapeChange: boolean;
-  imageStyle: React.CSSProperties;
-  onImageLoad: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
-  onImageError: (e: React.SyntheticEvent<HTMLImageElement, Event>) => void;
+  imageStyle: CSSProperties;
+  onImageLoad: (e: SyntheticEvent<HTMLImageElement, Event>) => void;
+  onImageError: (e: SyntheticEvent<HTMLImageElement, Event>) => void;
   onChange?: (path: Point[]) => void;
   onComplete?: (path: Point[]) => void;
   imageAlt?: string;
@@ -44,10 +43,10 @@ export interface ReactLassoState {
   pointer: Point;
 }
 
-export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState> {
+export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState> {
   public state: ReactLassoState;
-  public imageRef = React.createRef<HTMLImageElement>();
-  public svgRef = React.createRef<SVGSVGElement>();
+  public imageRef = createRef<HTMLImageElement>();
+  public svgRef = createRef<SVGSVGElement>();
   public svg = new SVGHelper(() => this.svgRef?.current);
   public angles: number[] = [];
   public path: PathState = {
@@ -436,6 +435,3 @@ export class ReactLasso extends React.Component<ReactLassoProps, ReactLassoState
     onImageLoad: Function.prototype
   };
 }
-
-// eslint-disable-next-line react-refresh/only-export-components
-export { ReactLasso as default, ReactLasso as Component, getClippedImageCanvas as getCanvas };

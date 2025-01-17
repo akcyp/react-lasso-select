@@ -1,4 +1,4 @@
-import React from 'react';
+import { createRef, Component as ReactComponent, type ComponentType } from 'react';
 import { SVGHelper } from './SVGHelpers';
 
 import { Point, Vector, touchOrMouseEvent } from './helpers';
@@ -10,9 +10,9 @@ export interface WithDraggableProps {
   onDragEnd?: (arg: Point) => void;
 }
 
-export const withDraggable = <P extends object>(Component: React.ComponentType<P>) =>
-  class DraggableHOC extends React.Component<P & WithDraggableProps> {
-    public ref = React.createRef<SVGSVGElement>();
+export const withDraggable = <P extends object>(Component: ComponentType<P>) =>
+  class DraggableHOC extends ReactComponent<P & WithDraggableProps> {
+    public ref = createRef<SVGSVGElement>();
     public svg = new SVGHelper(() => this.ref?.current?.ownerSVGElement);
     public dragLastPosition: null | Point = null;
     public wasMoved = false;

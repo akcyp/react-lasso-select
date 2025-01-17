@@ -1,4 +1,4 @@
-import React from 'react';
+import { forwardRef } from 'react';
 import { withDraggable } from './withDraggable';
 import { Point } from './helpers';
 
@@ -9,7 +9,7 @@ export interface SVGPolylineProps {
 }
 
 export const SVGPolyline = withDraggable(
-  React.forwardRef<SVGPolylineElement, SVGPolylineProps>(function SVGPolyline(
+  forwardRef<SVGPolylineElement, SVGPolylineProps>(function SVGPolyline(
     { path, animate, draggable },
     ref
   ) {

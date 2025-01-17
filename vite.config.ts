@@ -5,11 +5,20 @@ import dts from 'vite-plugin-dts';
 import { resolve } from 'node:path';
 
 export default defineConfig({
-  plugins: [react(), eslint(), dts({ include: ['lib'] })],
+  plugins: [
+    react(),
+    eslint(),
+    dts({
+      include: ['lib'],
+      rollupTypes: true,
+      tsconfigPath: './tsconfig.app.json'
+    })
+  ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'lib/index.tsx'),
-      formats: ['es', 'cjs'],
+      name: 'react-lasso-select',
+      entry: resolve(__dirname, 'lib/index.ts'),
+      formats: ['es'],
       fileName: 'index'
     },
     rollupOptions: {

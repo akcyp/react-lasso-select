@@ -1,15 +1,15 @@
-import React from 'react';
+import { forwardRef, type CSSProperties, type MouseEvent, type TouchEvent } from 'react';
 import { withDraggable } from './withDraggable';
 import { Point } from './helpers';
 
 export interface SVGPointProps extends Point {
-  style: React.CSSProperties;
+  style: CSSProperties;
   draggable: boolean;
-  onClickTouchEvent: (e: React.MouseEvent | React.TouchEvent) => void;
+  onClickTouchEvent: (e: MouseEvent | TouchEvent) => void;
 }
 
 export const SVGPoint = withDraggable(
-  React.forwardRef<SVGRectElement, SVGPointProps>(function SVGPoint(
+  forwardRef<SVGRectElement, SVGPointProps>(function SVGPoint(
     { x, y, onClickTouchEvent, draggable, style },
     ref
   ) {
