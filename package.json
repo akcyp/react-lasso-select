@@ -43,7 +43,7 @@
     "test": "vitest",
     "preview": "vite preview",
     "prepare": "husky",
-    "prepublishOnly": "pnpm run build"
+    "prepublish": "pnpm run build"
   },
   "peerDependencies": {
     "prop-types": "^15.8.1",
