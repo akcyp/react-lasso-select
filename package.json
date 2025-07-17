@@ -42,8 +42,8 @@
     "format": "prettier -c .",
     "test": "vitest",
     "preview": "vite preview",
-    "prepare": "husky && npm run build",
-    "prepublishOnly": "pnpm run build"
+    "prepare": "husky",
+    "prepublish": "pnpm run build"
   },
   "peerDependencies": {
     "prop-types": "^15.8.1",
