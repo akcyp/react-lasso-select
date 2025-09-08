@@ -20,16 +20,13 @@ See `src/App.tsx`
 
 ## Installation
 
-With yarn:
-
 ```bash
-yarn add react-lasso-select
-```
-
-With npm:
-
-```bash
+# with npm
 npm i react-lasso-select
+# with yarn
+yarn add react-lasso-select
+# with pnpm
+pnpm add react-lasso-select
 ```
 
 ## Usage
@@ -119,4 +116,14 @@ There are some extra features made to improve user experience.
 
 Feel free to post any PR or issues. Be here for information on features, bug fixes, or documentation.
 
-To develop clone this repository and run `npm i -D` and `npm run build`, this will create a `lib` folder with compiled files. I suggest you test your changes before PR with `npm link` and `create-react-app` & `npm link react-lasso-select` in another directory.
+You can help contributing this repository. You may need:
+
+```ts
+"engines": {
+  "node": "^22.10.6",
+  "pnpm": "^9.1.0"
+}
+```
+
+To work locally run `pnpm i` and `pnpm run dev`.
+Before opening a PR, please check if `pnpm run prod` works correctly. Also make sure that `pnpm run test` pass.

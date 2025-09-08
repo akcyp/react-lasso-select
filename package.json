@@ -36,8 +36,10 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "preinstall": "npx only-allow pnpm",
     "build": "tsc -b && vite build",
+    "dev": "rimraf dist && vite",
+    "prod": "pnpm run build && vite",
     "lint": "eslint .",
     "format": "prettier -c .",
     "test": "vitest",
@@ -45,10 +47,14 @@
     "prepare": "husky",
     "prepublishOnly": "pnpm run build"
   },
+  "engines": {
+    "node": "^22.10.6",
+    "pnpm": "^9.1.0"
+  },
   "peerDependencies": {
     "prop-types": "^15.8.1",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": ">=18.3.1",
+    "react-dom": ">=18.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
@@ -64,11 +70,13 @@
     "husky": "^9.1.7",
     "lint-staged": "^15.3.0",
     "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.18.2",
     "vite": "^6.0.5",
     "vite-plugin-dts": "^4.5.0",
     "vite-plugin-eslint2": "^5.0.3",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^2.1.8"
   },
   "husky": {

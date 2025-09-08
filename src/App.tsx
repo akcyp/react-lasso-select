@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
-import { ReactLassoSelect, getCanvas } from '../dist/index';
+import { SyntheticEvent, useCallback, useMemo, useState } from 'react';
 import src from './assets/demo.jpg';
 import './App.css';
+import { getCanvas, ReactLassoSelect } from 'react-lasso-select';
 
 interface Point {
   x: number;
@@ -54,15 +54,15 @@ export default function App() {
           disabledShapeChange={controls.disabledShapeChange}
           imageStyle={{ width: `${controls.width}px` }}
           onChange={setPoints}
-          onComplete={(value) => {
+          onComplete={(value: Point[]) => {
             if (!value.length) return;
-            getCanvas(src, value, (err, canvas) => {
+            getCanvas(src, value, (err: Error | null, canvas: HTMLCanvasElement) => {
               if (!err) {
                 setClippedImg(canvas.toDataURL());
               }
             });
           }}
-          onImageLoad={(e) => {
+          onImageLoad={(e: SyntheticEvent<HTMLImageElement, Event>) => {
             console.log('RLS: onImageLoad event triggered');
             const img = e.target as HTMLImageElement;
             setImgSize({
