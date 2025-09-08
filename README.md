@@ -9,7 +9,7 @@ A responsive react tool for marking irregular areas in images (lasso / free sele
 
 ## Demos
 
-See `src/App.tsx`
+See `src/App.tsx` (https://akcyp.github.io/react-lasso-select/)
 
 ## Features
 
@@ -125,5 +125,12 @@ You can help contributing this repository. You may need:
 }
 ```
 
-To work locally run `pnpm i` and `pnpm run dev`.
+To work locally run following commands:
+
+```bash
+corepack enable && corepack up # install and use pnpm 10.15.1
+pnpm install
+pnpm run dev
+```
+
 Before opening a PR, please check if `pnpm run prod` works correctly. Also make sure that `pnpm run test` pass.

@@ -14,12 +14,12 @@
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-    
+
     /* Paths */
     "baseUrl": ".",
     "paths": {
       "react-lasso-select": ["./dist", "./lib"],
-      "react-lasso-select/*": ["./dist/*", "./lib/*"],
+      "react-lasso-select/*": ["./dist/*", "./lib/*"]
     },
 
     /* Linting */
