@@ -121,7 +121,7 @@ You can help contributing this repository. You may need:
 ```ts
 "engines": {
   "node": "^22.10.6",
-  "pnpm": "^9.1.0"
+  "pnpm": "^10.15.1"
 }
 ```
 
