@@ -1,7 +1,7 @@
 import { SyntheticEvent, useCallback, useMemo, useState } from 'react';
 import src from './assets/demo.jpg';
 import './App.css';
-import { getCanvas, ReactLassoSelect } from 'react-lasso-select';
+import { getCanvas, ReactLassoSelect, SelectionMode } from 'react-lasso-select';
 
 interface Point {
   x: number;
@@ -22,10 +22,14 @@ const pointsFromString = (raw: string): Point[] =>
     .map((point) => point.split(','))
     .map(([x, y]) => ({ x: Number(x), y: Number(y) }));
 
-const initialPoints = pointsFromString('172,173 509,99 458,263');
+const initialLassoPoints = pointsFromString('172,173 509,99 458,263');
+const initialRectanglePoints = pointsFromString('100,100 300,100 300,300 100,300');
 
 export default function App() {
-  const [points, setPoints] = useState<Point[]>(initialPoints);
+  const [selectionMode, setSelectionMode] = useState<SelectionMode>();
+  const [points, setPoints] = useState<Point[]>(
+    selectionMode === 'rectangle' ? initialRectanglePoints : initialLassoPoints
+  );
   const pointsAsString = useMemo(() => pointsToString(points), [points]);
 
   const [clippedImg, setClippedImg] = useState(blankImage);
@@ -44,6 +48,11 @@ export default function App() {
     [setControls]
   );
 
+  const handleSelectionModeChange = (mode: SelectionMode) => {
+    setSelectionMode(mode);
+    setPoints(mode === 'rectangle' ? initialRectanglePoints : initialLassoPoints);
+  };
+
   return (
     <main className="main">
       <div className="component">
@@ -53,6 +62,7 @@ export default function App() {
           disabled={controls.disabled}
           disabledShapeChange={controls.disabledShapeChange}
           imageStyle={{ width: `${controls.width}px` }}
+          selectionMode={selectionMode}
           onChange={setPoints}
           onComplete={(value: Point[]) => {
             if (!value.length) return;
@@ -76,6 +86,17 @@ export default function App() {
         />
       </div>
       <div className="controls">
+        <div className="control">
+          <label htmlFor="c-mode">Selection Mode:</label>
+          <select
+            id="c-mode"
+            value={selectionMode}
+            onChange={(e) => handleSelectionModeChange(e.target.value as SelectionMode)}
+          >
+            <option value="lasso">Lasso</option>
+            <option value="rectangle">Rectangle</option>
+          </select>
+        </div>
         <p className="points">Points: {pointsAsString}</p>
 
         <div className="control">
