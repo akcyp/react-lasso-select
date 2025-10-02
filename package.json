@@ -1,6 +1,6 @@
 {
   "name": "react-lasso-select",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A responsive react tool for marking irregular areas in images (lasso / free select)",
   "author": "akcyp",
   "license": "ISC",
