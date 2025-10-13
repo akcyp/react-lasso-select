@@ -14,13 +14,14 @@ import {
   Vector,
   touchOrMouseEvent,
   Size,
-  approximateToAnAngleMultiplicity,
-  approximateToAngles,
-  calculateAnglesBeetwenPoints,
-  findPointByPosition
+  calculateAnglesBeetwenPoints
 } from './helpers';
 
 import { pathReducer, pathActions, pathReducerAction, PathState } from './pathReducer';
+import { RectangleSelection } from './rectangleSelection';
+import { LassoSelection } from './lassoSelection';
+
+export type SelectionMode = 'lasso' | 'rectangle';
 
 export interface ReactLassoProps {
   src: string;
@@ -34,6 +35,7 @@ export interface ReactLassoProps {
   onImageError: (e: SyntheticEvent<HTMLImageElement, Event>) => void;
   onChange?: (path: Point[]) => void;
   onComplete?: (path: Point[]) => void;
+  selectionMode?: SelectionMode;
   imageAlt?: string;
   crossOrigin?: 'anonymous' | 'use-credentials' | '';
 }
@@ -48,6 +50,8 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
   public imageRef = createRef<HTMLImageElement>();
   public svgRef = createRef<SVGSVGElement>();
   public svg = new SVGHelper(() => this.svgRef?.current);
+  public rectangleSelection = new RectangleSelection(this.svg);
+  public lassoSelection = new LassoSelection(this.svg);
   public angles: number[] = [];
   public path: PathState = {
     points: [],
@@ -71,6 +75,14 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
     };
   }
   render() {
+    const isRectangleMode = this.props.selectionMode === 'rectangle';
+    const cursor =
+      isRectangleMode && !this.props.disabled
+        ? 'crosshair'
+        : this.props.disabled
+          ? 'not-allowed'
+          : 'default';
+
     return (
       <div
         className={objectToClassName({
@@ -84,7 +96,7 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
           margin: '0',
           padding: '0',
           fontSize: '0',
-          cursor: this.props.disabled ? 'not-allowed' : 'default',
+          cursor: cursor,
           ...this.props.style
         }}
       >
@@ -107,13 +119,17 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
             height: '100%',
             overflow: 'hidden',
             userSelect: 'none',
-            touchAction: 'none'
+            touchAction: 'none',
+            cursor: cursor
           }}
           viewBox={`0 0 ${this.props.viewBox.width} ${this.props.viewBox.height}`}
-          onMouseMove={this.onMouseTouchMove}
-          onTouchMove={this.onMouseTouchMove}
-          onClick={this.onClick}
+          onMouseDown={this.onMouseDown}
+          onMouseMove={this.onMouseMove}
+          onMouseUp={this.onMouseUp}
+          onTouchStart={this.onTouchStart}
+          onTouchMove={this.onTouchMove}
           onTouchEnd={this.onTouchEnd}
+          onClick={this.onClick}
           onContextMenu={this.onContextMenu}
           onMouseLeave={this.hidePointer}
         >
@@ -125,6 +141,7 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
             onDragEnd={this.onDragEnd}
             animate={!this.props.disabled}
             path={this.getPolylinePoints()}
+            selectionMode={this.props.selectionMode ?? 'lasso'}
           />
           {this.getRoundedPoints().map(({ x, y }, idx) => (
             <SVGPoint
@@ -147,6 +164,55 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
       </div>
     );
   }
+  onMouseDown = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+    if (this.props.selectionMode === 'rectangle') {
+      this.onRectangleStart(e);
+    }
+  };
+  onMouseMove = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+    if (this.props.selectionMode === 'rectangle') {
+      this.onRectangleMove(e);
+    } else {
+      this.onMouseTouchMove(e);
+    }
+  };
+  onMouseUp = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
+    if (this.props.selectionMode === 'rectangle') {
+      this.onRectangleEnd(e);
+    }
+  };
+  onTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (this.props.selectionMode === 'rectangle') {
+      this.onRectangleStart(e);
+    }
+  };
+  onTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
+    if (this.props.selectionMode === 'rectangle') {
+      this.onRectangleMove(e);
+    } else {
+      this.onMouseTouchMove(e);
+    }
+  };
+  onRectangleStart = (e: touchOrMouseEvent<SVGSVGElement>) => {
+    if (this.props.disabled || !this.isLoaded()) return;
+
+    this.rectangleSelection.onStart(e, this.state.path, this.dispatchPathAction.bind(this));
+  };
+  onRectangleMove = (e: touchOrMouseEvent<SVGSVGElement>) => {
+    if (this.props.disabled || !this.isLoaded()) return;
+
+    this.rectangleSelection.onMove(e, this.state.path, this.dispatchPathAction.bind(this));
+  };
+  onRectangleEnd = (e: touchOrMouseEvent<SVGSVGElement>) => {
+    if (this.props.disabled || !this.isLoaded()) return;
+
+    this.rectangleSelection.onEnd(
+      e,
+      this.state.path,
+      this.finishRectangleSelection.bind(this),
+      this.cancelRectangleSelection.bind(this)
+    );
+  };
   componentDidUpdate(prevProps: ReactLassoProps) {
     if (!prevProps.disabled && this.props.disabled && !this.path.closed) {
       this.hidePointer();
@@ -177,12 +243,15 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
       }
     }
   }
-  emitOnChange({ points }: PathState) {
-    if (this.props.onChange) {
-      const convertedPoints = this.convertPoints(points);
-      this.lastEmittedPoints = convertedPoints;
-      this.props.onChange(convertedPoints);
-    }
+  emitOnChange({ points, closed }: PathState) {
+    if (!this.props.onChange) return;
+
+    const shouldEmit = this.shouldEmitChange(points, closed);
+    if (!shouldEmit) return;
+
+    const convertedPoints = this.convertPoints(points);
+    this.lastEmittedPoints = convertedPoints;
+    this.props.onChange(convertedPoints);
   }
   emitOnComplete(convertedPoints: Point[]) {
     if (this.props.onComplete) {
@@ -267,67 +336,46 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
       : border;
   }
   getPolylinePoints(): Point[] {
-    const roundedPoints = this.getRoundedPoints();
-    return roundedPoints.concat(
-      this.state.path.closed ? roundedPoints[0] : roundPointCoordinates(this.state.pointer)
-    );
+    if (this.props.selectionMode === 'rectangle') {
+      return this.rectangleSelection.getPolylinePoints(
+        this.state.path,
+        this.getRoundedPoints.bind(this)
+      );
+    }
+
+    return this.lassoSelection.getPolylinePoints(this.state.path, this.state.pointer);
   }
   getMousePosition(
     e: touchOrMouseEvent<SVGSVGElement>,
     lookupForNearlyPoints = true,
     lookupForApproximation = true
   ): [Point, { point: Point; index: number }] {
-    let pointer = this.svg.getMouseCoordinates(e);
-    if (lookupForApproximation) {
-      const ctrlCmdPressed = navigator.platform.includes('Mac') ? e.metaKey : e.ctrlKey;
-      const lastPoint = this.path.points[this.path.points.length - 1];
-      // straighten path from last point
-      if (ctrlCmdPressed && lastPoint) {
-        if (e.shiftKey) {
-          // lookup for parallel lines
-          pointer = approximateToAngles(lastPoint, pointer, this.angles);
-        } else {
-          // angle approximation to 15 deg
-          pointer = approximateToAnAngleMultiplicity(lastPoint, pointer, Math.PI / 12);
-        }
-      }
-    }
-    const { point, index } = findPointByPosition(this.path.points, pointer, 10);
-    if (lookupForNearlyPoints && index > -1) {
-      pointer = { ...point };
-    }
-    return [pointer, { point, index }];
+    this.lassoSelection.setAngles(this.angles);
+
+    return this.lassoSelection.getMousePosition(e, this.state.path, {
+      lookupForNearlyPoints,
+      lookupForApproximation
+    });
   }
   // Events
   onShapeDrag = ({ dx, dy }: Vector) => {
-    const newPath = this.path.points.map(({ x, y }) => ({
-      x: x + dx,
-      y: y + dy
-    }));
-    if (!newPath.some((point) => this.svg.isAboveTheBorder(point))) {
-      this.dispatchPathAction({
-        type: pathActions.MOVE,
-        payload: { x: dx, y: dy }
-      });
-    }
+    this.lassoSelection.onShapeDrag(
+      { dx, dy },
+      this.state.path,
+      this.dispatchPathAction.bind(this)
+    );
   };
   onPointDrag = (idx: number, { dx, dy }: Vector) => {
-    const point = { ...this.path.points[idx] };
-    point.x += dx;
-    point.y += dy;
-    if (!this.svg.isAboveTheBorder(point)) {
-      this.dispatchPathAction({
-        type: pathActions.MODIFY,
-        payload: { ...point, index: idx }
-      });
-    }
+    this.lassoSelection.onPointDrag(
+      idx,
+      { dx, dy },
+      this.state.path,
+      this.dispatchPathAction.bind(this)
+    );
   };
   onPointClick = (idx: number) => {
-    if (this.isLoaded() && !this.props.disabled && !this.path.closed) {
-      this.dispatchPathAction({
-        type: pathActions.ADD,
-        payload: this.path.points[idx]
-      });
+    if (this.isLoaded() && !this.props.disabled) {
+      this.lassoSelection.onPointClick(idx, this.state.path, this.dispatchPathAction.bind(this));
     }
   };
   onDragEnd = () => {
@@ -346,61 +394,92 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
     this.imgError = true;
     this.props.onImageError(e);
   };
-  onClickTouchEvent = (e: touchOrMouseEvent<SVGSVGElement>) => {
-    if (this.isLoaded() && !this.props.disabled) {
-      if (this.path.closed) {
-        if (e.target === this.svgRef.current) {
-          this.dispatchPathAction({
-            type: pathActions.RESET
-          });
-        }
-        return;
-      }
-      const [pointer] = this.getMousePosition(e);
-      if (!this.svg.isAboveTheBorder(pointer)) {
-        this.dispatchPathAction({
-          type: pathActions.ADD,
-          payload: roundPointCoordinates(pointer, 1e3),
-          pointer
-        });
-      } else {
-        this.hidePointer();
-      }
+  onLassoClick = (e: touchOrMouseEvent<SVGSVGElement>) => {
+    if (this.isLoaded() && !this.props.disabled && this.props.selectionMode === 'lasso') {
+      this.lassoSelection.onClickTouch(
+        e,
+        this.state.path,
+        this.dispatchPathAction.bind(this),
+        this.svgRef,
+        this.hidePointer.bind(this)
+      );
     }
   };
   onClick = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
-    this.onClickTouchEvent(e);
+    if (this.props.selectionMode === 'lasso') {
+      this.onLassoClick(e);
+    }
   };
   onTouchEnd = (e: React.TouchEvent<SVGSVGElement>) => {
-    if (e.cancelable) {
-      e.preventDefault();
-      this.onClickTouchEvent(e);
+    if (this.props.selectionMode === 'rectangle') {
+      this.onRectangleEnd(e);
+    } else {
+      if (e.cancelable) {
+        e.preventDefault();
+        this.onLassoClick(e);
+      }
+      this.hidePointer();
     }
-    this.hidePointer();
   };
   onMouseTouchMove = (e: touchOrMouseEvent<SVGSVGElement>) => {
     if (this.isLoaded()) {
-      const [pointer] = this.getMousePosition(e);
-      this.setPointer(pointer);
+      this.lassoSelection.onMove(e, this.state.path, this.setPointer.bind(this));
     }
   };
   onContextMenu = (e: React.MouseEvent<SVGSVGElement, MouseEvent>) => {
     if (this.isLoaded()) {
       e.preventDefault();
-      if (!this.props.disabled && !this.path.closed) {
-        const [pointer, { index }] = this.getMousePosition(e);
-        if (index > -1) {
-          this.dispatchPathAction({
-            type: pathActions.DELETE,
-            payload: index,
-            pointer
-          });
-        } else {
-          this.setPointer(pointer);
-        }
+      if (!this.props.disabled) {
+        this.lassoSelection.onContextMenu(
+          e,
+          this.state.path,
+          this.dispatchPathAction.bind(this),
+          this.setPointer.bind(this)
+        );
       }
     }
   };
+
+  private finishRectangleSelection(rectanglePoints: Point[]) {
+    this.path = { points: rectanglePoints, closed: true };
+    this.setState({
+      path: { points: rectanglePoints, closed: true },
+      pointer: rectanglePoints[0]
+    });
+
+    this.emitOnChange({ points: rectanglePoints, closed: true });
+    const convertedPoints = this.convertPoints(rectanglePoints);
+    this.emitOnComplete(convertedPoints);
+  }
+
+  private cancelRectangleSelection(pointer: Point) {
+    this.setState({
+      path: { points: [], closed: false },
+      pointer: pointer
+    });
+    this.path = { points: [], closed: false };
+  }
+
+  private shouldEmitChange(points: Point[], closed: boolean): boolean {
+    if (this.props.selectionMode === 'rectangle') {
+      return this.shouldEmitRectangleChange(points, closed);
+    }
+
+    return true; // lasso mode
+  }
+
+  private shouldEmitRectangleChange(points: Point[], closed: boolean): boolean {
+    const MIN_RECTANGLE_POINTS = 4;
+
+    // Emit for completed rectangles
+    const isCompletedRectangle = closed && points.length >= MIN_RECTANGLE_POINTS;
+
+    // Emit for resetting selection
+    const isClearingSelection = points.length === 0 && this.lastEmittedPoints.length > 0;
+
+    return isCompletedRectangle || isClearingSelection;
+  }
+
   static propTypes = {
     value: PropTypes.arrayOf(
       PropTypes.exact({
@@ -422,7 +501,8 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
     crossOrigin: PropTypes.string,
     imageStyle: PropTypes.shape({}),
     onImageLoad: PropTypes.func,
-    onImageError: PropTypes.func
+    onImageError: PropTypes.func,
+    selectionMode: PropTypes.oneOf(['lasso', 'rectangle'])
   };
   static defaultProps = {
     value: [],
@@ -432,6 +512,7 @@ export class ReactLassoSelect extends Component<ReactLassoProps, ReactLassoState
     disabled: false,
     disabledShapeChange: false,
     onImageError: Function.prototype,
-    onImageLoad: Function.prototype
+    onImageLoad: Function.prototype,
+    selectionMode: 'lasso' // default to lasso
   };
 }

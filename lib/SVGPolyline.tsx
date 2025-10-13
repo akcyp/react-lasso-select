@@ -1,23 +1,43 @@
 import { forwardRef } from 'react';
 import { withDraggable } from './withDraggable';
 import { Point } from './helpers';
+import { SelectionMode } from './component';
 
 export interface SVGPolylineProps {
   path: Point[];
   animate: boolean;
   draggable: boolean;
+  selectionMode: SelectionMode;
 }
 
 export const SVGPolyline = withDraggable(
   forwardRef<SVGPolylineElement, SVGPolylineProps>(function SVGPolyline(
-    { path, animate, draggable },
+    { path, animate, draggable, selectionMode },
     ref
   ) {
+    if (!path || path.length === 0) {
+      return null;
+    }
+
+    const points =
+      selectionMode === 'rectangle' && path.length === 2
+        ? (() => {
+            const [start, end] = path;
+            return [
+              { x: start.x, y: start.y },
+              { x: end.x, y: start.y },
+              { x: end.x, y: end.y },
+              { x: start.x, y: end.y },
+              { x: start.x, y: start.y }
+            ];
+          })()
+        : path;
+
     return (
       <polyline
         ref={ref}
         style={{ cursor: draggable ? 'move' : '' }}
-        points={path.map(({ x, y }) => `${x},${y}`).join(' ')}
+        points={points.map(({ x, y }) => `${x},${y}`).join(' ')}
         fill="rgba(0,0,0,0)"
         stroke="white"
         strokeWidth="1.5"
