@@ -11,13 +11,11 @@ export class SVGHelper {
     return svg;
   }
   getCTM() {
+    // https://www.w3.org/TR/SVGTiny12/coords.html#TransformMatrixDefined
     const svg = this.getSvg();
-    let ctm = svg.getCTM();
-    if (ctm === null) {
-      // https://www.w3.org/TR/SVGTiny12/coords.html#TransformMatrixDefined
-      const svgChild = svg.querySelector('rect[visibility="hidden"]') as SVGRectElement;
-      ctm = svgChild.getCTM();
-    }
+    // due to firefox (gecko) problems with getCTM(), it's better to use child element matrix
+    const svgChild = svg.querySelector('rect[visibility="hidden"]') as SVGRectElement;
+    const ctm = svgChild.getCTM();
     if (!ctm) throw new Error('CTM is null');
     return ctm;
   }
